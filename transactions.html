@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>All Transactions · Expense Tracker</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            background: #f5f5f7;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            margin: auto;
+            min-width: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 16px;
+            color: #007aff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #777;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <a href="index.html" class="back-link">← Back</a>
+
+        <h1>All Transactions</h1>
+
+        <div class="card">
+            <div id="expenseList">
+                Loading...
+            </div>
+        </div>
+
+    </div>
+
+    <script src="shared.js"></script>
+    <script>
+        async function loadAllExpenses() {
+            const list = document.getElementById("expenseList");
+
+            try {
+                const expenses = await fetchExpenses();
+                const allExpenses = [...expenses].reverse();
+
+                list.innerHTML = "";
+
+                if (allExpenses.length === 0) {
+                    list.innerHTML =
+                        '<div class="empty-state">No transactions yet.</div>';
+                    return;
+                }
+
+                allExpenses.forEach(expense => {
+                    list.appendChild(createExpenseItem(expense));
+                });
+
+            } catch (error) {
+                console.error(error);
+                list.innerText = "Unable to load transactions.";
+            }
+        }
+
+        loadAllExpenses();
+    </script>
+
+</body>
+
+</html>

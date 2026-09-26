@@ -131,6 +131,18 @@
             margin-top: 18px;
             font-weight: 600;
         }
+
+        .view-all-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 12px;
+            background: #f5f5f7;
+            color: #007aff;
+            font-weight: 600;
+            text-decoration: none;
+        }
     </style>
 </head>
 
@@ -234,19 +246,16 @@
             <div id="expenseHistory">
                 Loading...
             </div>
+            <a href="transactions.html" id="viewAllLink" class="view-all-link" style="display: none;">
+                See all transactions →
+            </a>
         </div>
 
     </div>
 
 
+    <script src="shared.js"></script>
     <script>
-
-        // =====================================================
-        // GOOGLE APPS SCRIPT API
-        // =====================================================
-
-        const API_URL = "https://script.google.com/macros/s/AKfycbwi1wk_5LYnCVZLMLE67981LgmVxp-htonn2mVLyhys6LjC9tpb_NPgkhRVznvpHmxw/exec";
-
 
         // =====================================================
         // CATEGORY → SUB-CATEGORY
@@ -552,7 +561,7 @@
                message.innerText = "Expense added successfully ✓";
 
                 // Refresh recent transactions and budget totals
-                await loadExpenses();
+                await loadExpenses(true);
                 
                 // Clear amount and note
                 document.getElementById("amount").value = "";
@@ -574,17 +583,6 @@
 
             }
 
-        }
-
-        function formatExpenseDate(dateValue) {
-
-            const date = new Date(dateValue);
-
-            return date.toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            });
         }
 
         function updateSpendingTotals(expenses) {
@@ -787,16 +785,17 @@
 
         }
 
-        async function loadExpenses() {
+        async function loadExpenses(forceRefresh = false) {
 
             const history =
                 document.getElementById("expenseHistory");
 
+            const viewAllLink =
+                document.getElementById("viewAllLink");
+
             try {
 
-                const response = await fetch(API_URL);
-
-                const data = await response.json();
+                const data = await fetchAppData({ forceRefresh });
 
                 const expenses = data.expenses;
                 const budgets = data.budgets;
@@ -812,66 +811,11 @@
                 history.innerHTML = "";
 
                 recentExpenses.forEach(expense => {
-
-                    const item =
-                        document.createElement("div");
-
-                    item.style.padding = "14px 0";
-                    item.style.borderBottom =
-                        "1px solid #eee";
-
-                    item.innerHTML = `
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-            ">
-
-                <div>
-
-                    <div style="
-                        font-size:17px;
-                        font-weight:600;
-                    ">
-                        ${expense.subCategory || expense.category || "Expense"}
-                    </div>
-
-                    <div style="
-                        font-size:13px;
-                        color:#777;
-                        margin-top:4px;
-                    ">
-                        ${formatExpenseDate(expense.date)} · ${expense.category}
-                    </div>
-
-                    ${expense.note
-                            ? `
-                        <div style="
-                            font-size:13px;
-                            color:#777;
-                            margin-top:4px;
-                        ">
-                            ${expense.note}
-                        </div>
-                        `
-                            : ""
-                        }
-
-                </div>
-
-                <div style="
-                    font-size:18px;
-                    font-weight:600;
-                ">
-                    ₹${expense.amount}
-                </div>
-
-            </div>
-        `;
-
-                    history.appendChild(item);
-
+                    history.appendChild(createExpenseItem(expense));
                 });
+
+                viewAllLink.style.display =
+                    expenses.length > 0 ? "block" : "none";
 
             } catch (error) {
 
@@ -879,6 +823,8 @@
 
                 history.innerText =
                     "Unable to load expenses.";
+
+                viewAllLink.style.display = "none";
             }
         }
 
