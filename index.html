@@ -498,15 +498,14 @@
                 });
 
 
-                message.innerText = "Expense added successfully ✓";
+               message.innerText = "Expense added successfully ✓";
 
+                // Refresh recent transactions and budget totals
+                await loadExpenses();
+                
                 // Clear amount and note
                 document.getElementById("amount").value = "";
                 document.getElementById("note").value = "";
-
-                // Keep category, sub-category and date unchanged
-                // Put cursor back in Amount
-                document.getElementById("amount").focus();
 
 
             } catch (error) {
