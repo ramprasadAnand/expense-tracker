@@ -558,11 +558,11 @@
                 });
 
 
-               message.innerText = "Expense added successfully ✓";
+                message.innerText = "Expense added successfully ✓";
 
                 // Refresh recent transactions and budget totals
                 await loadExpenses(true);
-                
+
                 // Clear amount and note
                 document.getElementById("amount").value = "";
                 document.getElementById("note").value = "";
@@ -590,51 +590,48 @@
             const today = new Date();
 
             const todayString =
-                today.toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric"
-                });
+                today.getFullYear() +
+                "-" +
+                String(today.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(today.getDate()).padStart(2, "0");
 
-            const month = today.getMonth();
-            const year = today.getFullYear();
+            const currentMonth =
+                today.getFullYear() +
+                "-" +
+                String(today.getMonth() + 1).padStart(2, "0");
+
 
             let todayTotal = 0;
             let monthTotal = 0;
 
+
             expenses.forEach(expense => {
 
-                const expenseDate =
-                    new Date(expense.date);
+                const expenseDate = String(expense.date);
 
-                const expenseAmount =
-                    Number(expense.amount) || 0;
+                const amount = Number(expense.amount) || 0;
 
-                const expenseDateString =
-                    expenseDate.toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric"
-                    });
 
-                if (expenseDateString === todayString) {
-                    todayTotal += expenseAmount;
+                // Today's expenses
+                if (expenseDate === todayString) {
+                    todayTotal += amount;
                 }
 
-                if (
-                    expenseDate.getMonth() === month &&
-                    expenseDate.getFullYear() === year
-                ) {
-                    monthTotal += expenseAmount;
+
+                // This month's expenses
+                if (expenseDate.startsWith(currentMonth)) {
+                    monthTotal += amount;
                 }
 
             });
 
+
             document.getElementById("todayTotal").innerText =
-                `₹${todayTotal.toLocaleString("en-IN")}`;
+                "₹" + todayTotal.toLocaleString("en-IN");
 
             document.getElementById("monthTotal").innerText =
-                `₹${monthTotal.toLocaleString("en-IN")}`;
+                "₹" + monthTotal.toLocaleString("en-IN");
         }
 
         function updateBudgetTracker(expenses, budgets) {
@@ -748,11 +745,11 @@
                 width:${width}%;
                 height:100%;
                 background:${percentage > 100
-                                    ? "#ff3b30"
-                                    : percentage >= 70
-                                        ? "#ff9500"
-                                        : "#34c759"
-                                };
+                        ? "#ff3b30"
+                        : percentage >= 70
+                            ? "#ff9500"
+                            : "#34c759"
+                    };
                 border-radius:10px;
             "></div>
 
