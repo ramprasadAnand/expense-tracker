@@ -193,7 +193,7 @@
                 text-align: left;
             ">
 
-                <div style="width: 50%;">
+                <div style="width: 50%; min-width: 0;">
                     <div style="
                         font-size: 14px;
                         color: #777;
@@ -201,16 +201,18 @@
                         Today
                     </div>
 
-                    <div id="todayTotal" style="
+                        <div id="todayTotal" style="
                             font-size: 24px;
                             font-weight: 700;
                             margin-top: 5px;
+                            min-width: 0;
+                            white-space: nowrap;
                         ">
                         ₹0
                     </div>
                 </div>
 
-                <div style="width: 50%;">
+                <div style="width: 50%; min-width: 0;">
                     <div style="
                         font-size: 14px;
                         color: #777;
@@ -218,10 +220,12 @@
                         This Month
                     </div>
 
-                    <div id="monthTotal" style="
+                        <div id="monthTotal" style="
                             font-size: 24px;
                             font-weight: 700;
                             margin-top: 5px;
+                            min-width: 0;
+                            white-space: nowrap;
                         ">
                         ₹0
                     </div>
@@ -613,6 +617,16 @@
 
         function updateSpendingTotals(expenses) {
 
+            function fitTotalToColumn(totalElement) {
+                let fontSize = 24;
+                totalElement.style.fontSize = fontSize + "px";
+
+                while (totalElement.scrollWidth > totalElement.clientWidth && fontSize > 12) {
+                    fontSize -= 1;
+                    totalElement.style.fontSize = fontSize + "px";
+                }
+            }
+
             const today = new Date();
 
             const todayString =
@@ -658,6 +672,9 @@
 
             document.getElementById("monthTotal").innerText =
                 "₹" + monthTotal.toLocaleString("en-IN");
+
+            fitTotalToColumn(document.getElementById("todayTotal"));
+            fitTotalToColumn(document.getElementById("monthTotal"));
         }
 
         function updateBudgetTracker(expenses, budgets) {

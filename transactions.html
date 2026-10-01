@@ -51,6 +51,30 @@
             color: #777;
             padding: 20px 0;
         }
+
+        .filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #777;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 10px;
+            background: white;
+            font-size: 16px;
+        }
     </style>
 </head>
 
@@ -63,6 +87,16 @@
         <h1>All Transactions</h1>
 
         <div class="card">
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="monthSelect">Month</label>
+                    <select id="monthSelect"></select>
+                </div>
+                <div class="filter-group">
+                    <label for="yearSelect">Year</label>
+                    <select id="yearSelect"></select>
+                </div>
+            </div>
             <div id="expenseList">
                 Loading...
             </div>
@@ -72,24 +106,64 @@
 
     <script src="shared.js"></script>
     <script>
-        async function loadAllExpenses() {
-            const list = document.getElementById("expenseList");
+        const monthSelect = document.getElementById("monthSelect");
+        const yearSelect = document.getElementById("yearSelect");
+        const list = document.getElementById("expenseList");
+        let allExpenses = [];
 
+        for (let month = 0; month < 12; month++) {
+            const monthValue = String(month + 1).padStart(2, "0");
+            const monthName = new Date(2000, month, 1).toLocaleDateString("en-IN", {
+                month: "long"
+            });
+            monthSelect.add(new Option(monthName, monthValue));
+        }
+
+        monthSelect.value = String(new Date().getMonth() + 1).padStart(2, "0");
+
+        function renderTransactions() {
+            const selectedMonth = `${yearSelect.value}-${monthSelect.value}`;
+            const monthExpenses = allExpenses.filter(expense =>
+                String(expense.date || "").startsWith(selectedMonth)
+            );
+
+            list.innerHTML = "";
+
+            if (monthExpenses.length === 0) {
+                const monthName = monthSelect.options[monthSelect.selectedIndex].text;
+                list.innerHTML =
+                    `<div class="empty-state">No transactions for ${monthName} ${yearSelect.value}.</div>`;
+                return;
+            }
+
+            monthExpenses.forEach(expense => {
+                list.appendChild(createExpenseItem(expense));
+            });
+        }
+
+        monthSelect.addEventListener("change", renderTransactions);
+        yearSelect.addEventListener("change", renderTransactions);
+
+        async function loadAllExpenses() {
             try {
                 const expenses = await fetchExpenses();
-                const allExpenses = [...expenses].reverse();
+                allExpenses = [...expenses].reverse();
 
-                list.innerHTML = "";
-
-                if (allExpenses.length === 0) {
-                    list.innerHTML =
-                        '<div class="empty-state">No transactions yet.</div>';
-                    return;
-                }
-
+                const currentYear = new Date().getFullYear();
+                const years = new Set([currentYear]);
                 allExpenses.forEach(expense => {
-                    list.appendChild(createExpenseItem(expense));
+                    const year = Number(String(expense.date || "").slice(0, 4));
+                    if (Number.isInteger(year) && year > 0) {
+                        years.add(year);
+                    }
                 });
+
+                [...years].sort((first, second) => second - first).forEach(year => {
+                    yearSelect.add(new Option(year, String(year)));
+                });
+                yearSelect.value = String(currentYear);
+
+                renderTransactions();
 
             } catch (error) {
                 console.error(error);
