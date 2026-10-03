@@ -9,15 +9,23 @@
     <style>
         * { box-sizing: border-box; }
         :root { color-scheme: light; }
+        html { height:100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             background: #f5f6fa;
             color: #1d1d1f;
             margin: 0;
-            padding: 24px;
+            padding: 0;
+            height:100vh;
+            height:100dvh;
+            overflow:hidden;
         }
-        .container { max-width: 1240px; width: 100%; margin: 0 auto; min-width: 0; }
-        .page-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
+        .container {
+            max-width:1240px; width:100%; height:100%; margin:0 auto; min-width:0;
+            padding:24px; display:flex; flex-direction:column; overflow:hidden;
+        }
+        main { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-bottom:24px; scrollbar-gutter:stable; }
+        .page-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; padding-top:10px; }
         h1 { margin:0; font-size:28px; letter-spacing:-.5px; }
         .page-subtitle { color:#777; font-size:14px; margin-top:5px; }
         h2 { margin:0 0 16px; font-size:19px; letter-spacing:-.2px; }
@@ -35,6 +43,18 @@
         .home-grid .wide { grid-column:1 / -1; }
         .summary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         .summary-tile { padding:14px; border:1px solid #edf0f4; background:#f8f9fc; border-radius:13px; min-width:0; }
+        .summary-tile.metric-action { cursor:pointer; color:#1d1d1f; transition:transform .12s ease,background .12s ease; }
+        .summary-tile.metric-action .summary-label { color:#737987; }
+        .summary-tile.metric-action .summary-value { color:#1d1d1f !important; }
+        .summary-tile.metric-action:active { transform:scale(.985); background:#f0f5ff; }
+        .summary-tile.metric-action:focus-visible { outline:2px solid #1769e0; outline-offset:2px; }
+        .today-spend-tile { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:14px 0 0; padding:16px 18px; border:1px solid #cbdcf7; border-radius:15px; background:linear-gradient(115deg,#eaf2ff 0%,#f7faff 100%); box-shadow:0 3px 12px rgba(31,96,176,.09); cursor:pointer; color:#183b68; }
+        .today-spend-content { display:flex; flex-direction:column; align-items:flex-start; min-width:0; gap:4px; }
+        .today-spend-label { display:block; font-size:13px; font-weight:650; color:#526985; }
+        .today-spend-value { display:block; font-size:clamp(26px,4vw,34px); line-height:1.12; letter-spacing:-.7px; font-weight:800; color:#123d76; margin:0; }
+        .today-spend-meta { flex:0 0 auto; font-size:12px; font-weight:650; color:#2364b5; text-align:right; }
+        .today-spend-tile:active { transform:scale(.99); background:#e3eeff; }
+        .today-spend-tile:focus-visible { outline:2px solid #1769e0; outline-offset:2px; }
         .savings-investment-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         .savings-investment-grid .summary-tile { padding:12px; }
         .savings-investment-grid .summary-label { line-height:1.35; min-height:30px; }
@@ -63,10 +83,24 @@
         .floating-add { position:fixed; right:28px; bottom:28px; z-index:50; width:62px; height:62px; margin:0; padding:0; border:0; border-radius:50%; background:#1769e0; color:#fff; font-size:34px; line-height:1; box-shadow:0 8px 24px rgba(23,105,224,.32); display:flex; align-items:center; justify-content:center; }
         .modal-backdrop { position:fixed; inset:0; z-index:100; background:rgba(12,18,28,.48); display:none; align-items:center; justify-content:center; padding:18px; }
         .modal-backdrop.open { display:flex; }
-        .expense-modal { width:min(560px,100%); max-height:min(92vh,900px); overflow:auto; background:#f5f6fa; border-radius:20px; padding:0; box-shadow:0 20px 60px rgba(0,0,0,.22); }
+        .expense-modal { width:min(64vw,900px); min-width:0; max-height:min(92vh,900px); overflow:auto; background:#f5f6fa; border-radius:20px; padding:0; box-shadow:0 20px 60px rgba(0,0,0,.22); }
         .expense-modal .card { box-shadow:none; border-radius:20px; }
+        .insight-modal { width:min(640px, min(92vw, 900px)); max-height:min(82vh,800px); overflow:auto; background:#fff; border-radius:18px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.22); }
+        .insight-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid #eef0f4; }
+        .insight-row:last-child { border-bottom:0; }
+        .insight-name { font-size:13px; font-weight:650; }
+        .insight-meta { font-size:11px; color:#7b8290; margin-top:4px; line-height:1.4; }
+        .insight-amount { font-size:13px; font-weight:750; white-space:nowrap; }
         .mobile-tab-nav { display:none; }
         .empty-state { color:#777; font-size:14px; padding:12px 0; }
+        .app-loading { position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(245,246,250,.96); backdrop-filter:blur(8px); }
+        .app-loading[hidden] { display:none !important; }
+        .loading-card { width:min(340px,100%); padding:28px 24px; border-radius:18px; background:#fff; box-shadow:0 10px 36px rgba(20,30,50,.12); text-align:center; }
+        .loading-spinner { width:38px; height:38px; margin:0 auto 15px; border:4px solid #e6edf8; border-top-color:#1769e0; border-radius:50%; animation:tracker-spin .8s linear infinite; }
+        @keyframes tracker-spin { to { transform:rotate(360deg); } }
+        .loading-title { font-size:15px; font-weight:700; }
+        .loading-message { margin-top:7px; color:#737987; font-size:13px; line-height:1.45; }
+        .loading-retry { width:100%; margin-top:18px; padding:11px 14px; font-size:14px; }
         .budget-chart-wrap { width:100%; overflow-x:auto; }
         #budgetPerformanceChart { display:block; width:100%; min-width:560px; height:auto; }
         .chart-month { cursor:pointer; outline:none; }
@@ -86,8 +120,8 @@
         .chart-detail-summary .summary-tile { padding:10px; }
         .chart-detail-summary .summary-value { font-size:17px; }
         .chart-hint { color:#7b8290; font-size:12px; margin-top:8px; }
-        .chart-range-pills { display:flex; gap:5px; padding:4px; border-radius:11px; background:#f0f3f8; flex-shrink:0; }
-        .chart-range-pill { width:auto; margin:0; padding:7px 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:#697386; font-size:12px; font-weight:750; }
+        .chart-range-pills { display:flex; gap:2px; padding:3px; border-radius:11px; background:#f0f3f8; flex-shrink:0; }
+        .chart-range-pill { width:auto; margin:0; padding:7px 10px; border:1px solid transparent; border-radius:8px; background:transparent; color:#697386; font-size:12px; font-weight:750; }
         .chart-range-pill.active { background:#fff; color:#1769e0; border-color:#dce7f7; box-shadow:0 1px 4px rgba(20,30,50,.08); }
         .chart-point { cursor:pointer; outline:none; touch-action:manipulation; transition:opacity .12s ease; }
         .chart-point:active { opacity:.62; }
@@ -141,9 +175,9 @@
         #expenseHistory { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         #expenseHistory > * { min-width:0; }
         @media (max-width: 760px) {
-            body { padding:14px 14px 100px; }
-            .container { max-width:560px; }
-            .page-header { margin-bottom:10px; }
+            .container { max-width:560px; padding:14px 14px 0; }
+            main { padding-bottom:100px; }
+            .page-header { margin-bottom:10px; padding-top:12px; }
             h1 { font-size:24px; }
             .desktop-tab-nav { display:none; }
             .mobile-tab-nav { display:flex; position:fixed; z-index:60; left:10px; right:10px; bottom:10px; width:auto; margin:0; padding:6px; justify-content:space-around; gap:2px; border:1px solid #e2e6ee; background:rgba(255,255,255,.96); backdrop-filter:blur(14px); box-shadow:0 5px 24px rgba(20,30,50,.13); }
@@ -155,7 +189,7 @@
             #budgetTracker { grid-template-columns:1fr; }
             #expenseHistory { grid-template-columns:1fr; }
             .floating-add { width:58px; height:58px; right:18px; bottom:88px; }
-            .expense-modal { max-height:88vh; }
+            .expense-modal { width:calc(100vw - 28px); min-width:0; max-height:88vh; }
         }
         @media (max-width: 380px) {
             body { padding:10px 10px 96px; }
@@ -195,14 +229,21 @@
                     <div class="card wide">
                         <div class="section-heading"><h2>Monthly overview</h2><span id="homeMonthCaption" style="font-size:12px;color:#777;"></span></div>
                         <div class="summary-grid">
-                            <div class="summary-tile"><div class="summary-label">Total budget</div><div id="homeTotalBudget" class="summary-value">₹0</div></div>
-                            <div class="summary-tile"><div class="summary-label">Spent so far</div><div id="homeSpent" class="summary-value">₹0</div></div>
+                            <button type="button" class="summary-tile metric-action" id="totalBudgetTile" aria-label="View all available budget categories" style="text-align:left;width:100%;margin:0;"><div class="summary-label">Total budget</div><div id="homeTotalBudget" class="summary-value">₹0</div></button>
+                            <button type="button" class="summary-tile metric-action" id="spentSoFarTile" aria-label="View categories with spending" style="text-align:left;width:100%;margin:0;"><div class="summary-label">Spent so far</div><div id="homeSpent" class="summary-value">₹0</div></button>
                             <div class="summary-tile"><div class="summary-label">Budget remaining</div><div id="homeRemaining" class="summary-value">₹0</div></div>
-                            <div class="summary-tile"><div class="summary-label">Unbudgeted expenses</div><div id="homeUnbudgeted" class="summary-value">₹0</div></div>
+                            <button type="button" class="summary-tile metric-action" id="unbudgetedTile" aria-label="View unbudgeted transactions" style="text-align:left;width:100%;margin:0;"><div class="summary-label">Unbudgeted expenses</div><div id="homeUnbudgeted" class="summary-value">₹0</div></button>
                         </div>
                         <div style="margin-top:16px;display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#737987;"><span>Budget utilisation</span><strong id="homeUtilisation">0% used</strong></div>
                         <div class="progress-track home-progress-track"><div id="homeProgress" class="progress-fill"></div></div>
                         <div class="progress-meta"><span id="homeProgressSpent">₹0 spent</span><strong id="homeProgressRemaining">₹0 remaining</strong></div>
+                        <button type="button" class="today-spend-tile" id="todaySpendTile" style="width:100%;text-align:left;">
+                            <span class="today-spend-content">
+                                <span class="today-spend-label">TOTAL SPENT TODAY</span>
+                                <strong class="today-spend-value" id="todaySpendValue">₹0</strong>
+                            </span>
+                            <span class="today-spend-meta" id="todaySpendMeta">Tap to view details&nbsp;›</span>
+                        </button>
                     </div>
 
                     <div class="card wide" id="budgetPerformanceCard">
@@ -217,22 +258,13 @@
                                 <button type="button" class="chart-range-pill" data-range="1Y" aria-pressed="false">1Y</button>
                             </div>
                         </div>
-                        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
-                            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:#687080;"><span style="width:10px;height:10px;border-radius:2px;background:#3985d6;display:inline-block;"></span><span id="budgetChartBudgetLegend">Monthly budget</span></div>
-                            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:#687080;"><span style="width:18px;height:3px;border-radius:3px;background:#e5a13a;display:inline-block;"></span>Actual spending</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#687080;"><span style="width:10px;height:10px;border-radius:2px;background:#3985d6;display:inline-block;"></span><span id="budgetChartBudgetLegend">Monthly budget</span></div>
+                            <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#687080;"><span style="width:18px;height:3px;border-radius:3px;background:#e5a13a;display:inline-block;"></span>Actual spending</div>
                         </div>
                         <div class="budget-chart-wrap"><svg id="budgetPerformanceChart" viewBox="0 0 700 285" role="group" aria-label="Budget and actual spending for the last six months"></svg></div>
                         <div class="chart-hint" id="budgetChartHint">Blue bars show the current monthly budget reference; historical budget snapshots are not stored. Orange values are actual expense transactions. Select a point to inspect its transactions.</div>
                         <div id="budgetMonthDetail" class="chart-detail" hidden></div>
-                    </div>
-
-                    <div class="card">
-                        <h2>Savings &amp; investments</h2>
-                        <div class="savings-investment-grid">
-                            <div class="summary-tile"><div class="summary-label">Sinking funds</div><div id="homeSinkingTotal" class="summary-value">₹0</div></div>
-                            <div class="summary-tile"><div class="summary-label">Investment contributions</div><div id="homeInvestmentTotal" class="summary-value">₹0</div></div>
-                        </div>
-                        <div style="font-size:12px;color:#777;margin-top:9px;">Contribution balances, not market value</div>
                     </div>
 
                     <div class="card wide">
@@ -275,6 +307,22 @@
         </nav>
 
         <button id="floatingAddButton" class="floating-add" type="button" aria-label="Add expense" title="Add expense">+</button>
+
+        <div id="appLoading" class="app-loading" role="status" aria-live="polite">
+            <div class="loading-card">
+                <div id="loadingSpinner" class="loading-spinner" aria-hidden="true"></div>
+                <div id="loadingTitle" class="loading-title">Loading your finances</div>
+                <div id="loadingMessage" class="loading-message">Fetching the latest data. This may take a moment.</div>
+                <button id="loadingRetry" class="loading-retry" type="button" hidden onclick="retryInitialLoad()">Try again</button>
+            </div>
+        </div>
+
+        <div id="insightModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="insightModalTitle">
+            <div class="insight-modal">
+                <div class="section-heading"><h2 id="insightModalTitle">Details</h2><button id="closeInsightModal" class="secondary-button" type="button" aria-label="Close">✕</button></div>
+                <div id="insightModalBody"></div>
+            </div>
+        </div>
 
         <div id="expenseModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
             <div class="expense-modal">
@@ -600,7 +648,7 @@
             if (event.target === expenseModal) closeExpenseModal();
         });
         document.addEventListener("keydown", event => {
-            if (event.key === "Escape") closeExpenseModal();
+            if (event.key === "Escape") { closeExpenseModal(); closeInsightModal(); }
         });
 
         function formatINR(value) {
@@ -1134,6 +1182,8 @@
                 group.addEventListener("click",selectPoint);
                 group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();selectPoint();}});
             });
+            const chartWrap = svg.closest(".budget-chart-wrap");
+            if (chartWrap) requestAnimationFrame(() => { chartWrap.scrollLeft = chartWrap.scrollWidth; });
         }
 
         document.querySelectorAll(".chart-range-pill").forEach(button=>{
@@ -1142,6 +1192,51 @@
                 if(window.latestExpenseChartData) renderBudgetPerformanceChart(window.latestExpenseChartData.expenses,window.latestExpenseChartData.budgets);
             });
         });
+
+        function localDateKey(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        }
+
+        function showInsightModal(title, html) {
+            document.getElementById("insightModalTitle").textContent = title;
+            document.getElementById("insightModalBody").innerHTML = html || '<div class="empty-state">Nothing to show.</div>';
+            document.getElementById("insightModal").classList.add("open");
+        }
+        function closeInsightModal() { document.getElementById("insightModal").classList.remove("open"); }
+        document.getElementById("closeInsightModal").addEventListener("click", closeInsightModal);
+        document.getElementById("insightModal").addEventListener("click", event => { if (event.target.id === "insightModal") closeInsightModal(); });
+
+        function insightTransactionRows(items) {
+            if (!items.length) return '<div class="empty-state">No transactions found.</div>';
+            return items.map(item => `<div class="insight-row"><div><div class="insight-name">${escapeHTML(item.category || "Uncategorised")} · ${escapeHTML(item.subCategory || item.subcategory || "Other")}</div><div class="insight-meta">${escapeHTML(item.note || "No note")} · ${escapeHTML(String(item.date || ""))}</div></div><div class="insight-amount">${formatINR(expenseAmount(item.amount))}</div></div>`).join("");
+        }
+
+        function bindHomeMetricActions(expenses, budgetMap, monthKey) {
+            const monthExpenses = (expenses || []).filter(item => expenseMonthKey(item.date) === monthKey && !isInvestmentBudgetCategory(item.category));
+            const categories = {};
+            monthExpenses.forEach(item => { const key = item.category || "Uncategorised"; categories[key] = (categories[key] || 0) + expenseAmount(item.amount); });
+            document.getElementById("totalBudgetTile").onclick = () => {
+                const rows = Object.entries(budgetMap).sort((a,b) => a[0].localeCompare(b[0])).map(([category, amount]) => `<div class="insight-row"><div class="insight-name">${escapeHTML(category)}</div><div class="insight-amount">${formatINR(amount)}</div></div>`).join("");
+                showInsightModal("Available budget · " + transactionMonthLabel(monthKey), rows || '<div class="empty-state">No budget categories configured.</div>');
+            };
+            document.getElementById("spentSoFarTile").onclick = () => {
+                const rows = Object.entries(categories).sort((a,b) => b[1]-a[1]).map(([category, amount]) => `<div class="insight-row"><div class="insight-name">${escapeHTML(category)}</div><div class="insight-amount">${formatINR(amount)}</div></div>`).join("");
+                showInsightModal("Spending by category · " + transactionMonthLabel(monthKey), rows || '<div class="empty-state">No expenses recorded this month.</div>');
+            };
+            document.getElementById("unbudgetedTile").onclick = () => {
+                const items = monthExpenses.filter(item => (budgetMap[item.category] || 0) <= 0).slice().sort((a,b) => String(b.date).localeCompare(String(a.date)));
+                showInsightModal("Unbudgeted transactions · " + transactionMonthLabel(monthKey), insightTransactionRows(items));
+            };
+            const todayKey = localDateKey();
+            const todaysItems = (expenses || []).filter(item => expenseDateKey(item.date) === todayKey && !isInvestmentBudgetCategory(item.category));
+            const todayTotal = todaysItems.reduce((sum,item) => sum + expenseAmount(item.amount), 0);
+            document.getElementById("todaySpendValue").textContent = formatINR(todayTotal);
+            document.getElementById("todaySpendMeta").textContent = "Tap to view details ›";
+            document.getElementById("todaySpendTile").onclick = () => showInsightModal("Today's expenses · " + todayKey, insightTransactionRows(todaysItems));
+        }
 
         function renderHomeSummary(expenses, budgets, sinkingFunds, investmentFunds) {
             window.latestExpenseChartData = { expenses: expenses || [], budgets: budgets || [] };
@@ -1166,6 +1261,7 @@
             const unbudgeted = Object.entries(categorySpend).reduce((sum, [category, amount]) => {
                 return sum + ((budgetMap[category] || 0) <= 0 ? amount : 0);
             }, 0);
+            bindHomeMetricActions(expenses, budgetMap, monthKey);
             const remaining = totalBudget - spent;
             const utilisation = totalBudget > 0 ? Math.round((spent / totalBudget) * 100) : 0;
             document.getElementById("homeTotalBudget").textContent = formatINR(totalBudget);
@@ -1184,10 +1280,6 @@
             document.getElementById("homeProgressRemaining").style.color = remaining < 0 ? "#d70015" : "#23865b";
             renderBudgetPerformanceChart(expenses, budgets);
 
-            const sinkingTotal = (sinkingFunds || []).filter(f => f.active).reduce((sum, f) => sum + (Number(f.balance) || 0), 0);
-            const investmentTotal = (investmentFunds || []).filter(f => f.active).reduce((sum, f) => sum + (Number(f.balance) || 0), 0);
-            document.getElementById("homeSinkingTotal").textContent = formatINR(sinkingTotal);
-            document.getElementById("homeInvestmentTotal").textContent = formatINR(investmentTotal);
         }
 
         function renderSavingsAndInvestments(sinkingFunds, investmentFunds) {
@@ -1384,9 +1476,41 @@
             if (event.key === "Escape") closeMonthPicker();
         });
 
+        let initialLoadFinished = false;
+
+        function setInitialLoadingState(state, errorMessage = "") {
+            const overlay = document.getElementById("appLoading");
+            const spinner = document.getElementById("loadingSpinner");
+            const title = document.getElementById("loadingTitle");
+            const message = document.getElementById("loadingMessage");
+            const retry = document.getElementById("loadingRetry");
+            if (state === "loading") {
+                overlay.hidden = false;
+                spinner.hidden = false;
+                title.textContent = "Loading your finances";
+                message.textContent = "Fetching the latest data. This may take a moment.";
+                retry.hidden = true;
+            } else if (state === "error") {
+                overlay.hidden = false;
+                spinner.hidden = true;
+                title.textContent = "Couldn't load your data";
+                message.textContent = errorMessage || "Please check your connection and try again.";
+                retry.hidden = false;
+            } else {
+                overlay.hidden = true;
+            }
+        }
+
+        function retryInitialLoad() {
+            setInitialLoadingState("loading");
+            loadExpenses(true);
+        }
+
         async function loadExpenses(forceRefresh = false) {
             const history = document.getElementById("expenseHistory");
             const homeHistory = document.getElementById("homeRecentExpenses");
+            const showBlockingLoader = !initialLoadFinished;
+            if (showBlockingLoader) setInitialLoadingState("loading");
             try {
                 const data = await fetchAppData({ forceRefresh });
                 const expenses = data.expenses || [];
@@ -1409,10 +1533,13 @@
                 } else {
                     recentExpenses.forEach(expense => homeHistory.appendChild(createExpenseItem(expense)));
                 }
+                initialLoadFinished = true;
+                setInitialLoadingState("ready");
             } catch (error) {
                 console.error(error);
                 history.innerText = "Unable to load transactions.";
                 homeHistory.innerText = "Unable to load recent activity.";
+                if (showBlockingLoader) setInitialLoadingState("error", error.message);
             }
         }
 
@@ -1422,7 +1549,6 @@
             if (["home", "budget", "transactions", "funds"].includes(savedTab)) showTab(savedTab);
         } catch (_) {}
         loadExpenses();
-
     </script>
 
 </body>
