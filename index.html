@@ -80,7 +80,7 @@
         #sinkingFundTracker .fund-details { font-size:11px; color:#777; margin-top:4px; line-height:1.4; }
         #expenseHistory { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         #expenseHistory > * { min-width:0; }
-        .floating-add { position:fixed; right:28px; bottom:28px; z-index:50; width:62px; height:62px; margin:0; padding:0; border:0; border-radius:50%; background:#1769e0; color:#fff; font-size:34px; line-height:1; box-shadow:0 8px 24px rgba(23,105,224,.32); display:flex; align-items:center; justify-content:center; }
+        .floating-add { position:fixed; right:28px; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:50; width:62px; height:62px; margin:0; padding:0; border:0; border-radius:50%; background:#1769e0; color:#fff; font-size:34px; line-height:1; box-shadow:0 8px 24px rgba(23,105,224,.32); display:flex; align-items:center; justify-content:center; }
         .modal-backdrop { position:fixed; inset:0; z-index:100; background:rgba(12,18,28,.48); display:none; align-items:center; justify-content:center; padding:18px; }
         .modal-backdrop.open { display:flex; }
         .expense-modal { width:min(64vw,900px); min-width:0; max-height:min(92vh,900px); overflow:auto; background:#f5f6fa; border-radius:20px; padding:0; box-shadow:0 20px 60px rgba(0,0,0,.22); }
@@ -176,7 +176,7 @@
         #expenseHistory > * { min-width:0; }
         @media (max-width: 760px) {
             .container { max-width:560px; padding:14px 14px 0; }
-            main { padding-bottom:100px; }
+            main { padding-bottom:calc(128px + env(safe-area-inset-bottom)); }
             .page-header { margin-bottom:10px; padding-top:12px; }
             h1 { font-size:24px; }
             .desktop-tab-nav { display:none; }
@@ -188,11 +188,11 @@
             .card { padding:17px; border-radius:16px; }
             #budgetTracker { grid-template-columns:1fr; }
             #expenseHistory { grid-template-columns:1fr; }
-            .floating-add { width:58px; height:58px; right:18px; bottom:88px; }
+            .floating-add { width:58px; height:58px; right:18px; bottom:calc(82px + env(safe-area-inset-bottom)); }
             .expense-modal { width:calc(100vw - 28px); min-width:0; max-height:88vh; }
         }
         @media (max-width: 380px) {
-            body { padding:10px 10px 96px; }
+            body { padding:0; }
             .card { padding:14px; }
             #sinkingFundTracker .fund-grid { grid-template-columns:1fr; }
             .summary-tile { padding:11px; }
@@ -306,8 +306,6 @@
             <button class="tab-button" data-tab="funds"><span class="tab-icon">◉</span>Funds</button>
         </nav>
 
-        <button id="floatingAddButton" class="floating-add" type="button" aria-label="Add expense" title="Add expense">+</button>
-
         <div id="appLoading" class="app-loading" role="status" aria-live="polite">
             <div class="loading-card">
                 <div id="loadingSpinner" class="loading-spinner" aria-hidden="true"></div>
@@ -354,6 +352,8 @@
         </div>
 
     <script src="shared.js"></script>
+    <button id="floatingAddButton" class="floating-add" type="button" aria-label="Add expense" title="Add expense">+</button>
+
     <script>
 
         // =====================================================
