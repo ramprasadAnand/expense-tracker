@@ -53,6 +53,7 @@
         .today-spend-label { display:block; font-size:13px; font-weight:650; color:#526985; }
         .today-spend-value { display:block; font-size:clamp(26px,4vw,34px); line-height:1.12; letter-spacing:-.7px; font-weight:800; color:#123d76; margin:0; }
         .today-spend-meta { flex:0 0 auto; font-size:12px; font-weight:650; color:#2364b5; text-align:right; }
+        .today-spend-tile[hidden] { display:none !important; }
         .today-spend-tile:active { transform:scale(.99); background:#e3eeff; }
         .today-spend-tile:focus-visible { outline:2px solid #1769e0; outline-offset:2px; }
         .savings-investment-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
@@ -84,7 +85,9 @@
         .modal-backdrop { position:fixed; inset:0; z-index:100; background:rgba(12,18,28,.48); display:none; align-items:center; justify-content:center; padding:18px; }
         .modal-backdrop.open { display:flex; }
         .expense-modal { width:min(64vw,900px); min-width:0; max-height:min(92vh,900px); overflow:auto; background:#f5f6fa; border-radius:20px; padding:0; box-shadow:0 20px 60px rgba(0,0,0,.22); }
-        .expense-modal .card { box-shadow:none; border-radius:20px; }
+        .expense-modal .card { box-shadow:none; border-radius:20px; overflow:visible; }
+        /* Keep the submit action visible while the expense form content scrolls. */
+        .expense-modal #submitButton { position:sticky; bottom:0; z-index:6; margin-top:18px; margin-bottom:0; box-shadow:0 -8px 18px rgba(255,255,255,.92); }
         .insight-modal { width:min(640px, min(92vw, 900px)); max-height:min(82vh,800px); overflow:auto; background:#fff; border-radius:18px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.22); }
         .insight-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid #eef0f4; }
         .insight-row:last-child { border-bottom:0; }
@@ -189,7 +192,7 @@
             #budgetTracker { grid-template-columns:1fr; }
             #expenseHistory { grid-template-columns:1fr; }
             .floating-add { width:58px; height:58px; right:18px; bottom:calc(82px + env(safe-area-inset-bottom)); }
-            .expense-modal { width:calc(100vw - 28px); min-width:0; max-height:88vh; }
+            .expense-modal { width:calc(100vw - 28px); min-width:0; max-height:88vh; padding-bottom:env(safe-area-inset-bottom); }
         }
         @media (max-width: 380px) {
             body { padding:0; }
@@ -1183,7 +1186,21 @@
                 group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();selectPoint();}});
             });
             const chartWrap = svg.closest(".budget-chart-wrap");
-            if (chartWrap) requestAnimationFrame(() => { chartWrap.scrollLeft = chartWrap.scrollWidth; });
+            if (chartWrap) requestAnimationFrame(() => {
+                // 1M: bring the current day into view automatically.
+                // If viewing a past month, show the end of that month.
+                // 1Y and 6M: show the latest month at the right edge.
+                if (daily) {
+                    const today = new Date();
+                    const todayKey = localDateKey(today);
+                    const currentDayIndex = points.findIndex(point => point.key === todayKey);
+                    const targetIndex = currentDayIndex >= 0 ? currentDayIndex : points.length - 1;
+                    const targetX = left + (plotWidth / points.length) * (targetIndex + 0.5);
+                    chartWrap.scrollLeft = Math.max(0, targetX - chartWrap.clientWidth + 72);
+                } else {
+                    chartWrap.scrollLeft = chartWrap.scrollWidth;
+                }
+            });
         }
 
         document.querySelectorAll(".chart-range-pill").forEach(button=>{
@@ -1233,6 +1250,8 @@
             const todayKey = localDateKey();
             const todaysItems = (expenses || []).filter(item => expenseDateKey(item.date) === todayKey && !isInvestmentBudgetCategory(item.category));
             const todayTotal = todaysItems.reduce((sum,item) => sum + expenseAmount(item.amount), 0);
+            const todaySpendTile = document.getElementById("todaySpendTile");
+            todaySpendTile.hidden = todaysItems.length === 0;
             document.getElementById("todaySpendValue").textContent = formatINR(todayTotal);
             document.getElementById("todaySpendMeta").textContent = "Tap to view details ›";
             document.getElementById("todaySpendTile").onclick = () => showInsightModal("Today's expenses · " + todayKey, insightTransactionRows(todaysItems));
@@ -1269,10 +1288,10 @@
             document.getElementById("homeRemaining").textContent = formatINR(remaining);
             document.getElementById("homeRemaining").style.color = remaining < 0 ? "#d70015" : "#1d1d1f";
             document.getElementById("homeUnbudgeted").textContent = formatINR(unbudgeted);
-            document.getElementById("homeUnbudgeted").style.color = unbudgeted > 0 ? "#d70015" : "#1d1d1f";
+            document.getElementById("homeUnbudgeted").style.setProperty("color", unbudgeted > 0 ? "#d70015" : "#1d1d1f", "important");
             document.getElementById("homeUtilisation").textContent = `${utilisation}% used`;
             document.getElementById("homeProgress").style.width = `${Math.min(utilisation, 100)}%`;
-            document.getElementById("homeProgress").style.background = utilisation > 100 ? "#d70015" : utilisation >= 80 ? "#e58a13" : "linear-gradient(90deg,#35b779,#16865a)";
+            document.getElementById("homeProgress").style.background = utilisation > 70 ? "#d70015" : utilisation >= 50 ? "#e58a13" : "linear-gradient(90deg,#35b779,#16865a)";
             document.getElementById("homeProgressSpent").textContent = `${formatINR(spent)} spent`;
             document.getElementById("homeProgressRemaining").textContent = remaining < 0
                 ? `${formatINR(Math.abs(remaining))} over budget`
