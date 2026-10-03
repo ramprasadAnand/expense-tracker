@@ -26,11 +26,21 @@ function clearCache() {
 
 async function fetchFromApi() {
     const response = await fetch(API_URL);
+    if (!response.ok) {
+        throw new Error("Unable to reach the expense tracker API.");
+    }
+
     const data = await response.json();
+
+    if (data.success === false) {
+        throw new Error(data.error || "Unable to load tracker data.");
+    }
 
     cachedData = {
         expenses: data.expenses || [],
-        budgets: data.budgets || []
+        budgets: data.budgets || [],
+        sinkingFunds: data.sinkingFunds || [],
+        investmentFunds: data.investmentFunds || []
     };
 
     saveToSessionStorage(cachedData);
@@ -45,7 +55,12 @@ async function fetchAppData({ forceRefresh = false } = {}) {
 
         const stored = loadFromSessionStorage();
         if (stored) {
-            cachedData = stored;
+            cachedData = {
+                expenses: stored.expenses || [],
+                budgets: stored.budgets || [],
+                sinkingFunds: stored.sinkingFunds || [],
+                investmentFunds: stored.investmentFunds || []
+            };
             return cachedData;
         }
     } else {
@@ -64,6 +79,30 @@ async function fetchAppData({ forceRefresh = false } = {}) {
 async function fetchExpenses(options) {
     const data = await fetchAppData(options);
     return data.expenses;
+}
+
+function formatINR(amount) {
+    return "₹" + (Number(amount) || 0).toLocaleString("en-IN", {
+        maximumFractionDigits: 2
+    });
+}
+
+async function postToApi(payload) {
+    const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "text/plain"
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+        throw new Error(result.error || "Unable to save data.");
+    }
+
+    return result;
 }
 
 function formatExpenseDate(dateValue) {
@@ -122,7 +161,7 @@ function createExpenseItem(expense) {
                 font-size:18px;
                 font-weight:600;
             ">
-                ₹${expense.amount}
+                ₹${Number(expense.amount || 0).toLocaleString("en-IN")}
             </div>
         </div>
     `;
