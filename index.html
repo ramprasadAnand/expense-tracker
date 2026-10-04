@@ -81,6 +81,11 @@
         #sinkingFundTracker .fund-details { font-size:11px; color:#777; margin-top:4px; line-height:1.4; }
         #expenseHistory { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         #expenseHistory > * { min-width:0; }
+        .activity-search-wrap { position:relative; margin:2px 0 16px; }
+        .activity-search-wrap input { width:100%; margin:0; padding:12px 42px 12px 42px; border:1px solid #e1e6ef; border-radius:12px; background:#f8f9fc; font-size:14px; }
+        .activity-search-wrap input:focus { background:#fff; border-color:#8bb8f5; outline:2px solid rgba(23,105,224,.10); }
+        .activity-search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#7b8290; font-size:17px; pointer-events:none; }
+        .activity-search-hint { margin-top:6px; color:#89909d; font-size:11px; }
         .floating-add { position:fixed; right:28px; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:50; width:62px; height:62px; margin:0; padding:0; border:0; border-radius:50%; background:#1769e0; color:#fff; font-size:34px; line-height:1; box-shadow:0 8px 24px rgba(23,105,224,.32); display:flex; align-items:center; justify-content:center; }
         .modal-backdrop { position:fixed; inset:0; z-index:100; background:rgba(12,18,28,.48); display:none; align-items:center; justify-content:center; padding:18px; }
         .modal-backdrop.open { display:flex; }
@@ -289,6 +294,11 @@
                     <div class="section-heading">
                         <h2>Transactions</h2>
                         <span id="transactionCount" style="font-size:12px;color:#777;"></span>
+                    </div>
+                    <div class="activity-search-wrap">
+                        <span class="activity-search-icon" aria-hidden="true">⌕</span>
+                        <input id="activitySearch" type="search" placeholder="Search expenses by category, note, amount..." aria-label="Search expenses" autocomplete="off">
+                        <div class="activity-search-hint">Search within the selected month · Category, subcategory, note, amount or date</div>
                     </div>
                     <div id="expenseHistory">Loading...</div>
                 </div>
@@ -1458,14 +1468,27 @@
 
         function renderTransactionsForSelectedMonth() {
             const history = document.getElementById("expenseHistory");
-            const filtered = allTransactionExpenses.filter(expense =>
+            const monthExpenses = allTransactionExpenses.filter(expense =>
                 expenseMonthKey(expense.date) === selectedTransactionMonth
             );
+            const query = (document.getElementById("activitySearch")?.value || "").trim().toLocaleLowerCase();
+            const filtered = query ? monthExpenses.filter(expense => {
+                const searchableText = [
+                    expense.category, expense.subCategory, expense.subcategory,
+                    expense.note, expense.amount, expense.date
+                ].map(value => String(value == null ? "" : value)).join(" ").toLocaleLowerCase();
+                return searchableText.includes(query);
+            }) : monthExpenses;
             pageMonthButton.textContent = `${transactionMonthLabel(selectedTransactionMonth)} ▾`;
-            document.getElementById("transactionCount").textContent = `${filtered.length} transaction${filtered.length === 1 ? "" : "s"}`;
+            document.getElementById("transactionCount").textContent = query
+                ? `${filtered.length} of ${monthExpenses.length} transactions`
+                : `${filtered.length} transaction${filtered.length === 1 ? "" : "s"}`;
             history.innerHTML = "";
             if (!filtered.length) {
-                history.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">No transactions found for ${transactionMonthLabel(selectedTransactionMonth)}.</div>`;
+                const message = query
+                    ? `No expenses match “${escapeHTML(query)}” in ${transactionMonthLabel(selectedTransactionMonth)}.`
+                    : `No transactions found for ${transactionMonthLabel(selectedTransactionMonth)}.`;
+                history.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${message}</div>`;
                 return;
             }
             filtered.slice().reverse().forEach(expense => history.appendChild(createExpenseItem(expense)));
@@ -1494,6 +1517,7 @@
         document.addEventListener("keydown", event => {
             if (event.key === "Escape") closeMonthPicker();
         });
+        document.getElementById("activitySearch").addEventListener("input", renderTransactionsForSelectedMonth);
 
         let initialLoadFinished = false;
 
