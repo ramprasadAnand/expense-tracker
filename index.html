@@ -1170,8 +1170,8 @@
                 const x=xFor(index),value=Number(point.spent)||0,barY=yFor(value),barHeight=Math.max(0,baseline-barY);
                 return `<rect x="${x-barWidth/2}" y="${barY}" width="${barWidth}" height="${barHeight}" rx="4" fill="#e5a13a" opacity=".88"/>`;
             }).join("");
-            const budgetPoints=points.map((point,index)=>`${xFor(index)},${yFor(point.budget)}`).join(" ");
-            const budgetLine=`<polyline points="${budgetPoints}" fill="none" stroke="#3985d6" stroke-width="2.5" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>`;
+            const spendingPoints=points.map((point,index)=>`${xFor(index)},${yFor(point.spent)}`).join(" ");
+            const spendingLine=`<polyline points="${spendingPoints}" fill="none" stroke="#d97706" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>`;
             const groups=points.map((point,index)=>{
                 const x=xFor(index),y=yFor(point.spent),label=point.label;
                 const aria=daily?`${point.fullLabel}: spent ${formatINR(point.spent)}, ${point.transactions.length} transactions`:`${point.fullLabel}: spent ${formatINR(point.spent)}`;
@@ -1180,10 +1180,10 @@
             svg.setAttribute("viewBox",`0 0 ${width} ${height}`);
             svg.style.minWidth=daily?`${width}px`:"560px";
             svg.setAttribute("aria-label",daily?`Daily expenses for ${transactionMonthLabel(selectedTransactionMonth)}`:`Monthly expenses for the last ${points.length} months`);
-            svg.innerHTML=`${grid.join("")}${bars}${budgetLine}<line x1="${left}" y1="${baseline}" x2="${width-right}" y2="${baseline}" stroke="#cfd5df"/>${groups}`;
+            svg.innerHTML=`${grid.join("")}${bars}${spendingLine}<line x1="${left}" y1="${baseline}" x2="${width-right}" y2="${baseline}" stroke="#cfd5df"/>${groups}`;
             document.getElementById("budgetChartSubtitle").textContent=daily?`${transactionMonthLabel(selectedTransactionMonth)} · Daily spending · Tap a day to see transactions`:`Last ${points.length} months · Tap a month for category details`;
-            document.getElementById("budgetChartBudgetLegend").textContent=daily?"Daily budget allowance":"Monthly budget";
-            document.getElementById("budgetChartHint").textContent=daily?`Orange bars show actual spending for each day and rise only to that day's amount. The blue dashed line is the daily budget allowance.`:`Orange bars show actual spending for each month and rise only to that month's amount. The blue dashed line is the monthly budget reference. Historical budget snapshots are not stored.`;
+            document.getElementById("budgetChartBudgetLegend").textContent="Actual spending";
+            document.getElementById("budgetChartHint").textContent=daily?`Orange bars and the orange line show actual daily spending.`:`Orange bars and the orange line show actual monthly spending. Historical budget snapshots are not stored.`;
             document.querySelectorAll(".chart-range-pill").forEach(button=>{
                 const active=button.dataset.range===budgetChartRange;
                 button.classList.toggle("active",active);button.setAttribute("aria-pressed",active?"true":"false");
@@ -1191,8 +1191,8 @@
             svg.querySelectorAll(".chart-point").forEach(group=>{
                 const selectPoint=()=>{
                     const point=points[Number(group.dataset.pointIndex)];
-                    if(daily) showBudgetDayDetail(point);
-                    else showBudgetMonthDetail(point);
+                    if(daily) renderBudgetDayDetail(point);
+                    else renderBudgetMonthDetail(point);
                 };
                 group.addEventListener("click",selectPoint);
                 group.addEventListener("keydown",event=>{
@@ -1200,6 +1200,18 @@
                 });
             });
         }
+        // Range controls are wired once and redraw from the latest loaded data.
+        document.querySelectorAll(".chart-range-pill").forEach(button => {
+            button.addEventListener("click", () => {
+                const nextRange = button.dataset.range;
+                if (!["1M", "6M", "1Y"].includes(nextRange)) return;
+                if (budgetChartRange === nextRange) return;
+                budgetChartRange = nextRange;
+                const latest = window.latestExpenseChartData;
+                if (latest) renderBudgetPerformanceChart(latest.expenses, latest.budgets);
+            });
+        });
+
         function localDateKey(date = new Date()) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, "0");
