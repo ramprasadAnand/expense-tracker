@@ -1256,6 +1256,16 @@
             svg.style.minWidth=daily?`${width}px`:"560px";
             svg.setAttribute("aria-label",daily?`Daily expenses for ${transactionMonthLabel(selectedTransactionMonth)}`:`Monthly expenses for the last ${points.length} months`);
             svg.innerHTML=`${grid.join("")}${bars}${spendingLine}<line x1="${left}" y1="${baseline}" x2="${width-right}" y2="${baseline}" stroke="#cfd5df"/>${groups}`;
+
+            // Keep the chart viewport aligned with the selected range after every redraw:
+            // 1M starts at the first day; 6M and 1Y end at the current month.
+            const chartWrap = svg.closest(".budget-chart-wrap");
+            if (chartWrap) {
+                requestAnimationFrame(() => {
+                    chartWrap.scrollLeft = daily ? 0 : chartWrap.scrollWidth;
+                });
+            }
+
             document.getElementById("budgetChartSubtitle").textContent=daily?`${transactionMonthLabel(selectedTransactionMonth)} · Daily spending · Tap a day to see transactions`:`Last ${points.length} months · Tap a month for category details`;
             document.getElementById("budgetChartBudgetLegend").textContent="Actual spending";
             document.getElementById("budgetChartHint").textContent=daily?`Orange bars and the orange line show actual daily spending.`:`Orange bars and the orange line show actual monthly spending. Historical budget snapshots are not stored.`;
