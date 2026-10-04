@@ -81,11 +81,41 @@
         #sinkingFundTracker .fund-details { font-size:11px; color:#777; margin-top:4px; line-height:1.4; }
         #expenseHistory { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         #expenseHistory > * { min-width:0; }
-        .activity-search-wrap {
-            position:sticky; top:0; z-index:12; margin:0 -2px 12px; padding:10px 2px 10px;
-            background:#fff; border-bottom:1px solid #edf0f4;
+        /* Clip the transaction card to its rounded shape without creating a new
+           scroll container (unlike overflow:hidden), so the sticky header keeps
+           sticking to the main page scroller and the rows cannot paint over it. */
+        #tab-transactions > .card {
+            overflow:clip;
+            border-radius:18px;
+            position:relative;
+            isolation:isolate;
         }
-        .activity-search-field { position:relative; width:100%; }
+        .transaction-sticky-header {
+            position:sticky;
+            top:0;
+            z-index:30;
+            margin:-20px -20px 12px;
+            padding:16px 20px 8px;
+            background:#fff;
+            border-bottom:1px solid #edf0f4;
+            border-radius:18px 18px 0 0;
+            background-clip:padding-box;
+            box-shadow:0 4px 8px rgba(20,30,50,.025);
+        }
+        .transaction-section-heading { margin-bottom:0; padding:4px 0 8px; }
+        .transaction-heading-actions { display:flex; align-items:center; gap:9px; flex:0 0 auto; }
+        .activity-search-toggle, .activity-search-close {
+            display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px;
+            padding:0; margin:0; border:1px solid #e3e7ee; border-radius:10px; background:#fff; color:#596273;
+        }
+        .activity-search-toggle[hidden], .activity-search-wrap[hidden] { display:none !important; }
+        .activity-search-toggle svg, .activity-search-close svg { width:17px; height:17px; display:block; }
+        .activity-search-wrap {
+            position:relative; z-index:1; margin:0; padding:4px 0 8px;
+            background:#fff;
+        }
+        .activity-search-topline { display:flex; align-items:center; gap:9px; }
+        .activity-search-field { position:relative; width:100%; min-width:0; flex:1 1 auto; }
         .activity-search-wrap input {
             display:block; width:100%; height:44px; margin:0; padding:0 42px 0 42px;
             border:1px solid #e1e6ef; border-radius:12px; background:#f8f9fc;
@@ -213,6 +243,17 @@
             .home-grid { grid-template-columns:1fr; gap:12px; }
             .home-grid .wide { grid-column:auto; }
             .card { padding:17px; border-radius:16px; }
+            #tab-transactions > .card { border-radius:16px; }
+            .transaction-sticky-header { margin:-17px -17px 12px; padding:14px 17px 8px; border-radius:16px 16px 0 0; }
+            /* Keep the page at its normal scale when the search field receives focus on mobile Safari. */
+            html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+            .activity-search-wrap input {
+                font-family:inherit !important;
+                font-size:16px !important;
+                line-height:normal;
+                transform:none !important;
+                -webkit-text-size-adjust:100%;
+            }
             #budgetTracker { grid-template-columns:1fr; }
             #expenseHistory { grid-template-columns:1fr; }
             .floating-add { width:58px; height:58px; right:18px; bottom:calc(82px + env(safe-area-inset-bottom)); }
@@ -221,6 +262,7 @@
         @media (max-width: 380px) {
             body { padding:0; }
             .card { padding:14px; }
+            .transaction-sticky-header { margin:-14px -14px 12px; padding:13px 14px 8px; }
             #sinkingFundTracker .fund-grid { grid-template-columns:1fr; }
             .summary-tile { padding:11px; }
         }
@@ -310,16 +352,28 @@
 
             <section id="tab-transactions" class="tab-panel">
                 <div class="card">
-                    <div class="section-heading">
-                        <h2>Transactions</h2>
-                        <span id="transactionCount" style="font-size:12px;color:#777;"></span>
-                    </div>
-                    <div class="activity-search-wrap">
-                        <div class="activity-search-field">
-                            <span class="activity-search-icon" aria-hidden="true"></span>
-                            <input id="activitySearch" type="search" placeholder="Search expenses by category, note, amount..." aria-label="Search expenses" autocomplete="off">
+                    <div class="transaction-sticky-header">
+                        <div class="section-heading transaction-section-heading">
+                            <h2>Transactions</h2>
+                            <div class="transaction-heading-actions">
+                                <span id="transactionCount" style="font-size:12px;color:#777;"></span>
+                                <button id="activitySearchToggle" class="activity-search-toggle" type="button" aria-label="Open transaction search" title="Search transactions">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>
+                                </button>
+                            </div>
                         </div>
-                        <div class="activity-search-hint">Search within the selected month · Category, subcategory, note, amount or date</div>
+                        <div id="activitySearchWrap" class="activity-search-wrap" hidden>
+                        <div class="activity-search-topline">
+                            <div class="activity-search-field">
+                                <span class="activity-search-icon" aria-hidden="true"></span>
+                                <input id="activitySearch" type="search" placeholder="Search expenses by category, note, amount..." aria-label="Search expenses" autocomplete="off">
+                            </div>
+                            <button id="activitySearchClose" class="activity-search-close" type="button" aria-label="Close search" title="Close search">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                            <div class="activity-search-hint">Search within the selected month · Category, subcategory, note, amount or date</div>
+                        </div>
                     </div>
                     <div id="expenseHistory">Loading...</div>
                 </div>
@@ -1479,12 +1533,34 @@
             }
         }
 
+        const activitySearchWrap = document.getElementById("activitySearchWrap");
+        const activitySearchInput = document.getElementById("activitySearch");
+        const activitySearchToggle = document.getElementById("activitySearchToggle");
+        const activitySearchClose = document.getElementById("activitySearchClose");
+
+        function closeActivitySearch() {
+            activitySearchWrap.hidden = true;
+            activitySearchInput.value = "";
+            activitySearchToggle.focus();
+            renderTransactionsForSelectedMonth();
+        }
+
+        activitySearchToggle.addEventListener("click", () => {
+            activitySearchWrap.hidden = false;
+            // Do not autofocus on mobile: opening the bar should not summon the
+            // keyboard or trigger Safari's automatic viewport magnification.
+            if (!window.matchMedia("(max-width: 560px)").matches) {
+                activitySearchInput.focus();
+            }
+        });
+        activitySearchClose.addEventListener("click", closeActivitySearch);
+
         function renderTransactionsForSelectedMonth() {
             const history = document.getElementById("expenseHistory");
             const monthExpenses = allTransactionExpenses.filter(expense =>
                 expenseMonthKey(expense.date) === selectedTransactionMonth
             );
-            const query = (document.getElementById("activitySearch")?.value || "").trim().toLocaleLowerCase();
+            const query = (activitySearchInput?.value || "").trim().toLocaleLowerCase();
             const filtered = query ? monthExpenses.filter(expense => {
                 // Search every stored field, including description/note and any
                 // additional text fields returned by the backend.
@@ -1529,7 +1605,10 @@
         document.addEventListener("keydown", event => {
             if (event.key === "Escape") closeMonthPicker();
         });
-        document.getElementById("activitySearch").addEventListener("input", renderTransactionsForSelectedMonth);
+        activitySearchInput.addEventListener("input", renderTransactionsForSelectedMonth);
+        activitySearchInput.addEventListener("keydown", event => {
+            if (event.key === "Escape") closeActivitySearch();
+        });
 
         let initialLoadFinished = false;
 
