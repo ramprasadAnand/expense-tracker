@@ -81,12 +81,26 @@
         #sinkingFundTracker .fund-details { font-size:11px; color:#777; margin-top:4px; line-height:1.4; }
         #expenseHistory { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         #expenseHistory > * { min-width:0; }
-        /* Keep the transaction title/count/search controls pinned together while the list scrolls. */
-        #tab-transactions > .card { overflow:visible; }
+        /* Clip the transaction card to its rounded shape without creating a new
+           scroll container (unlike overflow:hidden), so the sticky header keeps
+           sticking to the main page scroller and the rows cannot paint over it. */
+        #tab-transactions > .card {
+            overflow:clip;
+            border-radius:18px;
+            position:relative;
+            isolation:isolate;
+        }
         .transaction-sticky-header {
-            position:sticky; top:0; z-index:15; margin:-2px -2px 12px; padding:2px 2px 8px;
-            background:#fff; border-bottom:1px solid #edf0f4;
-            border-radius:18px 18px 0 0; background-clip:padding-box;
+            position:sticky;
+            top:0;
+            z-index:30;
+            margin:-20px -20px 12px;
+            padding:16px 20px 8px;
+            background:#fff;
+            border-bottom:1px solid #edf0f4;
+            border-radius:18px 18px 0 0;
+            background-clip:padding-box;
+            box-shadow:0 4px 8px rgba(20,30,50,.025);
         }
         .transaction-section-heading { margin-bottom:0; padding:4px 0 8px; }
         .transaction-heading-actions { display:flex; align-items:center; gap:9px; flex:0 0 auto; }
@@ -124,10 +138,22 @@
         .floating-add { position:fixed; right:28px; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:50; width:62px; height:62px; margin:0; padding:0; border:0; border-radius:50%; background:#1769e0; color:#fff; font-size:34px; line-height:1; box-shadow:0 8px 24px rgba(23,105,224,.32); display:flex; align-items:center; justify-content:center; }
         .modal-backdrop { position:fixed; inset:0; z-index:100; background:rgba(12,18,28,.48); display:none; align-items:center; justify-content:center; padding:18px; }
         .modal-backdrop.open { display:flex; }
-        .expense-modal { width:min(64vw,900px); min-width:0; max-height:min(92vh,900px); overflow:auto; background:#f5f6fa; border-radius:20px; padding:0; box-shadow:0 20px 60px rgba(0,0,0,.22); }
+        .expense-modal {
+            width:min(64vw,900px); min-width:0; max-height:min(92vh,900px);
+            display:flex; flex-direction:column; overflow:hidden;
+            background:#f5f6fa; border-radius:20px; padding:0;
+            box-shadow:0 20px 60px rgba(0,0,0,.22);
+        }
+        .expense-form-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
         .expense-modal .card { box-shadow:none; border-radius:20px; overflow:visible; }
-        /* Keep the submit action visible while the expense form content scrolls. */
-        .expense-modal #submitButton { position:sticky; bottom:0; z-index:6; margin-top:18px; margin-bottom:0; box-shadow:0 -8px 18px rgba(255,255,255,.92); }
+        /* The form scrolls independently; its action stays in a permanently
+           reserved footer below the scroll viewport. */
+        .expense-modal-actions {
+            flex:0 0 auto; padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+            background:#fff; border-top:1px solid #e8ebf1;
+            box-shadow:0 -5px 16px rgba(20,30,50,.06);
+        }
+        .expense-modal-actions #submitButton { display:block; width:100%; margin:0; }
         .insight-modal { width:min(640px, min(92vw, 900px)); max-height:min(82vh,800px); overflow:auto; background:#fff; border-radius:18px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.22); }
         .insight-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid #eef0f4; }
         .insight-row:last-child { border-bottom:0; }
@@ -229,6 +255,8 @@
             .home-grid { grid-template-columns:1fr; gap:12px; }
             .home-grid .wide { grid-column:auto; }
             .card { padding:17px; border-radius:16px; }
+            #tab-transactions > .card { border-radius:16px; }
+            .transaction-sticky-header { margin:-17px -17px 12px; padding:14px 17px 8px; border-radius:16px 16px 0 0; }
             /* Keep the page at its normal scale when the search field receives focus on mobile Safari. */
             html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
             .activity-search-wrap input {
@@ -241,11 +269,13 @@
             #budgetTracker { grid-template-columns:1fr; }
             #expenseHistory { grid-template-columns:1fr; }
             .floating-add { width:58px; height:58px; right:18px; bottom:calc(82px + env(safe-area-inset-bottom)); }
-            .expense-modal { width:calc(100vw - 28px); min-width:0; max-height:88vh; padding-bottom:env(safe-area-inset-bottom); }
+            .expense-modal { width:calc(100vw - 28px); min-width:0; max-height:88vh; }
+            .expense-modal-actions { padding:10px 14px calc(10px + env(safe-area-inset-bottom)); }
         }
         @media (max-width: 380px) {
             body { padding:0; }
             .card { padding:14px; }
+            .transaction-sticky-header { margin:-14px -14px 12px; padding:13px 14px 8px; }
             #sinkingFundTracker .fund-grid { grid-template-columns:1fr; }
             .summary-tile { padding:11px; }
         }
@@ -395,6 +425,7 @@
 
         <div id="expenseModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
             <div class="expense-modal">
+                <div class="expense-form-scroll">
                 <div class="card" id="expenseFormCard">
                     <div class="section-heading"><h2 id="expenseModalTitle">Add Expense</h2><button id="closeExpenseModal" class="secondary-button" type="button" aria-label="Close">✕</button></div>
                     <!-- Amount -->
@@ -416,8 +447,11 @@
                     <label for="fundSelect">Deduct from sinking fund (Optional)</label>
                     <select id="fundSelect"><option value="">Do not deduct from a fund</option></select>
                     <div style="font-size:12px;color:#777;margin-top:6px;line-height:1.45;">Select a fund only when this expense should use its accumulated balance.</div>
-                    <button id="submitButton" onclick="submitExpense()">Add Expense</button>
                     <div id="message"></div>
+                </div>
+                </div>
+                <div class="expense-modal-actions">
+                    <button id="submitButton" type="button" onclick="submitExpense()">Add Expense</button>
                 </div>
             </div>
         </div>
@@ -571,6 +605,13 @@
                 "Other"
             ],
 
+            "Investments": [
+                "Mutual Funds",
+                "Stocks",
+                "ETFs",
+                "Other"
+            ],
+
             "Savings": [
                 "Emergency Fund",
                 "Goal-based Savings",
@@ -614,60 +655,77 @@
             document.getElementById("subCategory");
 
 
+        // Remember the most recently used category and sub-category on this device.
+        // If browser storage is unavailable, the form continues to work normally.
+        const LAST_EXPENSE_SELECTION_KEY = "expenseTracker.lastExpenseSelection.v1";
+        function readLastExpenseSelection() {
+            try {
+                return JSON.parse(localStorage.getItem(LAST_EXPENSE_SELECTION_KEY) || "null") || {};
+            } catch (_) {
+                return {};
+            }
+        }
+        function saveLastExpenseSelection() {
+            try {
+                localStorage.setItem(LAST_EXPENSE_SELECTION_KEY, JSON.stringify({
+                    category: categorySelect.value,
+                    subCategory: subCategorySelect.value
+                }));
+            } catch (_) {
+                // Storage is optional; never block expense entry.
+            }
+        }
+        const lastExpenseSelection = readLastExpenseSelection();
+
         Object.keys(categories).forEach(category => {
-
-            const option =
-                document.createElement("option");
-
+            const option = document.createElement("option");
             option.value = category;
             option.textContent = category;
-
             categorySelect.appendChild(option);
-
         });
 
+        if (categories[lastExpenseSelection.category]) {
+            categorySelect.value = lastExpenseSelection.category;
+        }
 
         // =====================================================
         // UPDATE SUB-CATEGORIES
         // =====================================================
 
-        function updateSubCategories() {
-
-            const category =
-                categorySelect.value;
-
+        function updateSubCategories(restoreLastSelection = false) {
+            const category = categorySelect.value;
             subCategorySelect.innerHTML = "";
 
-            categories[category].forEach(subCategory => {
-
-                const option =
-                    document.createElement("option");
-
+            (categories[category] || []).forEach(subCategory => {
+                const option = document.createElement("option");
                 option.value = subCategory;
                 option.textContent = subCategory;
-
                 subCategorySelect.appendChild(option);
-
             });
+
+            if (restoreLastSelection && lastExpenseSelection.category === category &&
+                categories[category].includes(lastExpenseSelection.subCategory)) {
+                subCategorySelect.value = lastExpenseSelection.subCategory;
+            }
         }
 
+        categorySelect.addEventListener("change", () => {
+            updateSubCategories(false);
+            saveLastExpenseSelection();
+        });
+        subCategorySelect.addEventListener("change", saveLastExpenseSelection);
 
-        categorySelect.addEventListener(
-            "change",
-            updateSubCategories
-        );
+        // Use the device's local calendar date (not UTC) to avoid a one-day shift.
+        function getLocalDateInputValue() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, "0");
+            const day = String(now.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        }
 
-
-        // =====================================================
-        // DEFAULT DATE
-        // =====================================================
-
-        document.getElementById("date").value =
-            new Date().toISOString().split("T")[0];
-
-
-        // Initialize sub-category
-        updateSubCategories();
+        document.getElementById("date").value = getLocalDateInputValue();
+        updateSubCategories(true);
 
 
         // =====================================================
@@ -698,9 +756,16 @@
 
         const expenseModal = document.getElementById("expenseModal");
         function openExpenseModal() {
+            // Keep the date current whenever a fresh entry is started, while
+            // preserving any values the user may have left in an unfinished form.
+            const dateInput = document.getElementById("date");
+            if (!dateInput.value) dateInput.value = getLocalDateInputValue();
             expenseModal.classList.add("open");
             document.body.style.overflow = "hidden";
-            setTimeout(() => document.getElementById("amount").focus(), 80);
+            setTimeout(() => {
+                const amountInput = document.getElementById("amount");
+                amountInput.focus({ preventScroll: true });
+            }, 80);
         }
         function closeExpenseModal() {
             expenseModal.classList.remove("open");
@@ -767,11 +832,13 @@
                     : "Expense added successfully ✓";
 
                 await loadExpenses(true);
+                saveLastExpenseSelection();
                 closeExpenseModal();
 
                 document.getElementById("amount").value = "";
                 document.getElementById("note").value = "";
                 document.getElementById("fundSelect").value = "";
+                document.getElementById("date").value = getLocalDateInputValue();
 
             } catch (error) {
                 console.error(error);
@@ -1232,6 +1299,31 @@
             svg.style.minWidth=daily?`${width}px`:"560px";
             svg.setAttribute("aria-label",daily?`Daily expenses for ${transactionMonthLabel(selectedTransactionMonth)}`:`Monthly expenses for the last ${points.length} months`);
             svg.innerHTML=`${grid.join("")}${bars}${spendingLine}<line x1="${left}" y1="${baseline}" x2="${width-right}" y2="${baseline}" stroke="#cfd5df"/>${groups}`;
+
+            // Keep the chart viewport focused on the most relevant date after every redraw.
+            // 1M: bring today into view (or the last day when viewing a past month).
+            // 6M / 1Y: keep the current month at the right edge.
+            const chartWrap = svg.closest(".budget-chart-wrap");
+            if (chartWrap) {
+                // On the first page load the chart may be rendered before its card
+                // has completed layout. Wait two animation frames so scrollWidth
+                // and clientWidth reflect the visible chart before aligning it.
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    if (!chartWrap.isConnected || chartWrap.clientWidth === 0) return;
+                    if (daily) {
+                        const todayKey = localDateKey(new Date());
+                        const targetIndex = points.findIndex(point => point.key === todayKey);
+                        const visibleIndex = targetIndex >= 0 ? targetIndex : points.length - 1;
+                        const targetX = xFor(visibleIndex);
+                        const targetScrollLeft = Math.max(0, targetX - chartWrap.clientWidth + 88);
+                        chartWrap.scrollTo({ left: targetScrollLeft, behavior: "smooth" });
+                    } else {
+                        const maxScrollLeft = Math.max(0, chartWrap.scrollWidth - chartWrap.clientWidth);
+                        chartWrap.scrollTo({ left: maxScrollLeft, behavior: "smooth" });
+                    }
+                }));
+            }
+
             document.getElementById("budgetChartSubtitle").textContent=daily?`${transactionMonthLabel(selectedTransactionMonth)} · Daily spending · Tap a day to see transactions`:`Last ${points.length} months · Tap a month for category details`;
             document.getElementById("budgetChartBudgetLegend").textContent="Actual spending";
             document.getElementById("budgetChartHint").textContent=daily?`Orange bars and the orange line show actual daily spending.`:`Orange bars and the orange line show actual monthly spending. Historical budget snapshots are not stored.`;
@@ -1445,9 +1537,8 @@
 
                     const details = document.createElement("div");
                     details.className = "fund-details";
-                    details.textContent = fund.name === "FIRE"
-                        ? "Manual contributions · no fixed monthly amount"
-                        : `Monthly: ${formatINR(monthly)} · Annual: ${formatINR(target)}`;
+                    details.textContent =
+                        `Monthly: ${formatINR(monthly)} · Annual: ${formatINR(target)}`;
 
                     item.appendChild(title);
                     item.appendChild(balanceText);
@@ -1458,73 +1549,6 @@
 
             addSection("Sinking Funds", activeSinkingFunds, true);
             addSection("Investments", activeInvestmentFunds, false);
-
-            // FIRE contributions are entered manually and saved only to
-            // InvestmentTransactions, never to the expense ledger.
-            const fireFund = activeInvestmentFunds.find(fund => fund.name === "FIRE");
-            if (fireFund) {
-                const contributionSection = document.createElement("div");
-                contributionSection.className = "fund-section";
-                contributionSection.style.marginTop = "20px";
-                contributionSection.style.paddingTop = "16px";
-                contributionSection.style.borderTop = "1px solid #eee";
-                contributionSection.innerHTML = `
-                    <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Add FIRE contribution</div>
-                    <div style="font-size:12px;color:#777;line-height:1.5;margin-bottom:10px;">Enter the amount you actually invested. This updates FIRE accumulation only and is not recorded as an expense.</div>
-                    <form id="fireContributionForm">
-                        <label for="fireContributionAmount">Investment amount</label>
-                        <input id="fireContributionAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="₹ 0" required>
-                        <label for="fireContributionDate">Investment date</label>
-                        <input id="fireContributionDate" type="date" required value="${localDateKey()}">
-                        <label for="fireContributionNote">Note (optional)</label>
-                        <input id="fireContributionNote" type="text" placeholder="Optional note">
-                        <button id="fireContributionButton" type="submit">Add FIRE investment</button>
-                        <div id="fireContributionMessage" role="status" aria-live="polite" style="font-size:13px;margin-top:10px;"></div>
-                    </form>
-                `;
-                tracker.appendChild(contributionSection);
-
-                const contributionForm = document.getElementById("fireContributionForm");
-                contributionForm.addEventListener("submit", async event => {
-                    event.preventDefault();
-                    const amountInput = document.getElementById("fireContributionAmount");
-                    const dateInput = document.getElementById("fireContributionDate");
-                    const noteInput = document.getElementById("fireContributionNote");
-                    const button = document.getElementById("fireContributionButton");
-                    const message = document.getElementById("fireContributionMessage");
-                    const amount = Number(amountInput.value);
-
-                    if (!Number.isFinite(amount) || amount <= 0 || !dateInput.value) {
-                        message.textContent = "Enter a valid amount and investment date.";
-                        message.style.color = "#c62828";
-                        return;
-                    }
-
-                    button.disabled = true;
-                    button.textContent = "Saving...";
-                    message.textContent = "";
-
-                    try {
-                        await postToApi({
-                            action: "addFireInvestmentContribution",
-                            amount,
-                            date: dateInput.value,
-                            note: noteInput.value
-                        });
-                        amountInput.value = "";
-                        noteInput.value = "";
-                        message.textContent = "FIRE contribution saved successfully ✓";
-                        message.style.color = "#23865b";
-                        await loadExpenses(true);
-                    } catch (error) {
-                        message.textContent = error.message || "Unable to save FIRE contribution.";
-                        message.style.color = "#c62828";
-                    } finally {
-                        button.disabled = false;
-                        button.textContent = "Add FIRE investment";
-                    }
-                });
-            }
         }
 
         // The page-header month menu is shared with the Transactions view.
