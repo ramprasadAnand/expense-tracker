@@ -81,26 +81,12 @@
         #sinkingFundTracker .fund-details { font-size:11px; color:#777; margin-top:4px; line-height:1.4; }
         #expenseHistory { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         #expenseHistory > * { min-width:0; }
-        /* Clip the transaction card to its rounded shape without creating a new
-           scroll container (unlike overflow:hidden), so the sticky header keeps
-           sticking to the main page scroller and the rows cannot paint over it. */
-        #tab-transactions > .card {
-            overflow:clip;
-            border-radius:18px;
-            position:relative;
-            isolation:isolate;
-        }
+        /* Keep the transaction title/count/search controls pinned together while the list scrolls. */
+        #tab-transactions > .card { overflow:visible; }
         .transaction-sticky-header {
-            position:sticky;
-            top:0;
-            z-index:30;
-            margin:-20px -20px 12px;
-            padding:16px 20px 8px;
-            background:#fff;
-            border-bottom:1px solid #edf0f4;
-            border-radius:18px 18px 0 0;
-            background-clip:padding-box;
-            box-shadow:0 4px 8px rgba(20,30,50,.025);
+            position:sticky; top:0; z-index:15; margin:-2px -2px 12px; padding:2px 2px 8px;
+            background:#fff; border-bottom:1px solid #edf0f4;
+            border-radius:18px 18px 0 0; background-clip:padding-box;
         }
         .transaction-section-heading { margin-bottom:0; padding:4px 0 8px; }
         .transaction-heading-actions { display:flex; align-items:center; gap:9px; flex:0 0 auto; }
@@ -243,8 +229,6 @@
             .home-grid { grid-template-columns:1fr; gap:12px; }
             .home-grid .wide { grid-column:auto; }
             .card { padding:17px; border-radius:16px; }
-            #tab-transactions > .card { border-radius:16px; }
-            .transaction-sticky-header { margin:-17px -17px 12px; padding:14px 17px 8px; border-radius:16px 16px 0 0; }
             /* Keep the page at its normal scale when the search field receives focus on mobile Safari. */
             html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
             .activity-search-wrap input {
@@ -262,7 +246,6 @@
         @media (max-width: 380px) {
             body { padding:0; }
             .card { padding:14px; }
-            .transaction-sticky-header { margin:-14px -14px 12px; padding:13px 14px 8px; }
             #sinkingFundTracker .fund-grid { grid-template-columns:1fr; }
             .summary-tile { padding:11px; }
         }
@@ -585,13 +568,6 @@
                 "Home Loan",
                 "Credit Card EMI",
                 "Loan Prepayment",
-                "Other"
-            ],
-
-            "Investments": [
-                "Mutual Funds",
-                "Stocks",
-                "ETFs",
                 "Other"
             ],
 
@@ -1256,16 +1232,6 @@
             svg.style.minWidth=daily?`${width}px`:"560px";
             svg.setAttribute("aria-label",daily?`Daily expenses for ${transactionMonthLabel(selectedTransactionMonth)}`:`Monthly expenses for the last ${points.length} months`);
             svg.innerHTML=`${grid.join("")}${bars}${spendingLine}<line x1="${left}" y1="${baseline}" x2="${width-right}" y2="${baseline}" stroke="#cfd5df"/>${groups}`;
-
-            // Keep the chart viewport aligned with the selected range after every redraw:
-            // 1M starts at the first day; 6M and 1Y end at the current month.
-            const chartWrap = svg.closest(".budget-chart-wrap");
-            if (chartWrap) {
-                requestAnimationFrame(() => {
-                    chartWrap.scrollLeft = daily ? 0 : chartWrap.scrollWidth;
-                });
-            }
-
             document.getElementById("budgetChartSubtitle").textContent=daily?`${transactionMonthLabel(selectedTransactionMonth)} · Daily spending · Tap a day to see transactions`:`Last ${points.length} months · Tap a month for category details`;
             document.getElementById("budgetChartBudgetLegend").textContent="Actual spending";
             document.getElementById("budgetChartHint").textContent=daily?`Orange bars and the orange line show actual daily spending.`:`Orange bars and the orange line show actual monthly spending. Historical budget snapshots are not stored.`;
@@ -1479,8 +1445,9 @@
 
                     const details = document.createElement("div");
                     details.className = "fund-details";
-                    details.textContent =
-                        `Monthly: ${formatINR(monthly)} · Annual: ${formatINR(target)}`;
+                    details.textContent = fund.name === "FIRE"
+                        ? "Manual contributions · no fixed monthly amount"
+                        : `Monthly: ${formatINR(monthly)} · Annual: ${formatINR(target)}`;
 
                     item.appendChild(title);
                     item.appendChild(balanceText);
@@ -1491,6 +1458,73 @@
 
             addSection("Sinking Funds", activeSinkingFunds, true);
             addSection("Investments", activeInvestmentFunds, false);
+
+            // FIRE contributions are entered manually and saved only to
+            // InvestmentTransactions, never to the expense ledger.
+            const fireFund = activeInvestmentFunds.find(fund => fund.name === "FIRE");
+            if (fireFund) {
+                const contributionSection = document.createElement("div");
+                contributionSection.className = "fund-section";
+                contributionSection.style.marginTop = "20px";
+                contributionSection.style.paddingTop = "16px";
+                contributionSection.style.borderTop = "1px solid #eee";
+                contributionSection.innerHTML = `
+                    <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Add FIRE contribution</div>
+                    <div style="font-size:12px;color:#777;line-height:1.5;margin-bottom:10px;">Enter the amount you actually invested. This updates FIRE accumulation only and is not recorded as an expense.</div>
+                    <form id="fireContributionForm">
+                        <label for="fireContributionAmount">Investment amount</label>
+                        <input id="fireContributionAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="₹ 0" required>
+                        <label for="fireContributionDate">Investment date</label>
+                        <input id="fireContributionDate" type="date" required value="${localDateKey()}">
+                        <label for="fireContributionNote">Note (optional)</label>
+                        <input id="fireContributionNote" type="text" placeholder="Optional note">
+                        <button id="fireContributionButton" type="submit">Add FIRE investment</button>
+                        <div id="fireContributionMessage" role="status" aria-live="polite" style="font-size:13px;margin-top:10px;"></div>
+                    </form>
+                `;
+                tracker.appendChild(contributionSection);
+
+                const contributionForm = document.getElementById("fireContributionForm");
+                contributionForm.addEventListener("submit", async event => {
+                    event.preventDefault();
+                    const amountInput = document.getElementById("fireContributionAmount");
+                    const dateInput = document.getElementById("fireContributionDate");
+                    const noteInput = document.getElementById("fireContributionNote");
+                    const button = document.getElementById("fireContributionButton");
+                    const message = document.getElementById("fireContributionMessage");
+                    const amount = Number(amountInput.value);
+
+                    if (!Number.isFinite(amount) || amount <= 0 || !dateInput.value) {
+                        message.textContent = "Enter a valid amount and investment date.";
+                        message.style.color = "#c62828";
+                        return;
+                    }
+
+                    button.disabled = true;
+                    button.textContent = "Saving...";
+                    message.textContent = "";
+
+                    try {
+                        await postToApi({
+                            action: "addFireInvestmentContribution",
+                            amount,
+                            date: dateInput.value,
+                            note: noteInput.value
+                        });
+                        amountInput.value = "";
+                        noteInput.value = "";
+                        message.textContent = "FIRE contribution saved successfully ✓";
+                        message.style.color = "#23865b";
+                        await loadExpenses(true);
+                    } catch (error) {
+                        message.textContent = error.message || "Unable to save FIRE contribution.";
+                        message.style.color = "#c62828";
+                    } finally {
+                        button.disabled = false;
+                        button.textContent = "Add FIRE investment";
+                    }
+                });
+            }
         }
 
         // The page-header month menu is shared with the Transactions view.
