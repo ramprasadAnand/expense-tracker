@@ -214,6 +214,54 @@
         .month-picker-option { width:100%; margin:0; padding:10px 4px; border:1px solid #e7ebf2; border-radius:9px; background:#f8f9fc; color:#394252; font-size:13px; font-weight:650; }
         .month-picker-option.selected { background:#eaf2ff; border-color:#8bb8f5; color:#1559b7; }
         .month-picker-option:disabled { opacity:.35; cursor:not-allowed; }
+        /* Add Expense: visual, thumb-friendly pickers */
+        .expense-form-scroll #expenseFormCard { padding:22px; }
+        .expense-form-scroll #expenseModalTitle { font-size:21px; }
+        .expense-form-scroll #amount {
+            height:64px; padding:8px 15px; font-size:30px; font-weight:750; letter-spacing:-.7px;
+            border:1px solid #dce5f2; background:#f8faff; border-radius:14px;
+        }
+        .expense-field-heading { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:19px; margin-bottom:9px; }
+        .expense-field-heading label { margin:0; font-size:14px; }
+        #selectedCategoryHint { color:#8a91a0; font-size:11px; }
+        .picker-eyebrow { color:#8a91a0; font-size:10px; font-weight:800; letter-spacing:.8px; margin:0 0 7px 2px; }
+        .recent-category-wrap { margin-bottom:12px; }
+        .recent-category-grid { display:flex; gap:7px; overflow-x:auto; padding:1px 1px 5px; scrollbar-width:none; }
+        .recent-category-grid::-webkit-scrollbar { display:none; }
+        .category-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+        .category-option {
+            min-width:0; min-height:76px; margin:0; padding:9px 5px 8px; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; gap:6px; border:1px solid #e8ebf1; border-radius:13px;
+            background:#fff; color:#303846; font:600 11px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;
+            text-align:center; touch-action:manipulation; transition:background .12s,border-color .12s,transform .12s;
+        }
+        .category-option .category-emoji { font-size:25px; line-height:1; }
+        .category-option .category-name { overflow-wrap:anywhere; }
+        .category-option.selected { border:1.5px solid #4388e8; background:#edf5ff; color:#1559b7; box-shadow:0 0 0 2px rgba(45,120,220,.08); }
+        .category-option:active,.subcategory-chip:active { transform:scale(.97); }
+        .recent-category-grid .category-option { flex:0 0 78px; min-height:65px; }
+        .picker-native-select { display:none !important; }
+        .subcategory-heading { margin-top:17px; }
+        .subcategory-chips { display:flex; flex-wrap:wrap; gap:8px; min-height:38px; }
+        .subcategory-chip {
+            width:auto; margin:0; padding:9px 13px; border:1px solid #e2e7ef; border-radius:999px;
+            background:#f7f8fb; color:#485264; font-size:12px; font-weight:650; line-height:1.2;
+        }
+        .subcategory-chip.selected { border-color:#4388e8; background:#eaf3ff; color:#1559b7; }
+        .expense-optional-fields { margin-top:11px; border:1px solid #edf0f4; border-radius:12px; background:#fbfcfe; overflow:hidden; }
+        .expense-optional-fields summary { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:12px 13px; cursor:pointer; color:#475164; font-size:12px; font-weight:650; list-style:none; }
+        .expense-optional-fields summary::-webkit-details-marker { display:none; }
+        .optional-tag { color:#9299a6; font-size:9px; font-weight:800; letter-spacing:.6px; }
+        .expense-optional-fields textarea,.expense-optional-fields select { width:calc(100% - 24px); margin:0 12px 12px; font-size:14px; }
+        .optional-help { padding:0 12px 12px; color:#7b8290; font-size:11px; line-height:1.4; }
+        .expense-form-scroll #date { margin-top:0; }
+        @media (max-width:560px) {
+            .expense-form-scroll #expenseFormCard { padding:17px; }
+            .category-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+            .category-option { min-height:72px; padding:8px 3px; font-size:10.5px; }
+            .category-option .category-emoji { font-size:24px; }
+            .recent-category-grid .category-option { flex-basis:74px; }
+        }
         label { display:block; margin-top:14px; margin-bottom:6px; font-weight:600; font-size:14px; }
         input, select, textarea {
             width:100%; padding:12px 13px; font-size:16px; border:1px solid #d2d2d7;
@@ -279,7 +327,79 @@
             #sinkingFundTracker .fund-grid { grid-template-columns:1fr; }
             .summary-tile { padding:11px; }
         }
-    </style>
+    
+        /* Expandable budget category cards */
+        .budget-category-card { min-width:0; border:1px solid #e7e9ee; border-radius:13px; padding:12px; background:#fff; overflow:hidden; }
+        .budget-category-card.unbudgeted-category-card { border-color:#ffc4bf; background:linear-gradient(135deg,#fff8f7,#fff1f0); }
+        .budget-category-toggle { display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px; padding:0; border:0; background:transparent; color:inherit; text-align:left; cursor:pointer; font:inherit; }
+        .budget-category-main { display:flex; min-width:0; flex-direction:column; gap:4px; }
+        .budget-category-title { font-size:14px; font-weight:700; overflow-wrap:anywhere; }
+        .budget-category-status { font-size:11px; color:#777; }
+        .budget-category-status.unbudgeted-status { color:#b00000; font-weight:650; }
+        .budget-category-right { display:flex; flex-shrink:0; align-items:center; gap:8px; }
+        .budget-category-amounts { white-space:nowrap; font-size:13px; color:#777; }
+        .budget-category-amounts strong { color:#20232a; font-size:14px; }
+        .unbudgeted-category-card .budget-category-amounts strong { color:#d70015; }
+        .budget-category-chevron {
+            width:7px; height:7px; flex:0 0 7px; display:inline-block;
+            border-right:1.8px solid #818795; border-bottom:1.8px solid #818795;
+            transform:rotate(45deg) translateY(-2px); transform-origin:center;
+            transition:transform .22s cubic-bezier(.2,.7,.2,1);
+        }
+        .budget-category-card.expanded .budget-category-chevron { transform:rotate(225deg) translateY(-2px); }
+        .budget-progress-track { height:7px; margin-top:10px; overflow:hidden; border-radius:10px; background:#e8e9ed; }
+        .budget-progress-fill { height:100%; border-radius:10px; }
+        .unbudgeted-category-note { margin-top:7px; color:#a33a32; font-size:11px; }
+        .budget-expense-details {
+            display:grid; grid-template-rows:0fr; opacity:0; margin-top:0; padding-top:0;
+            border-top:1px solid transparent; overflow:hidden;
+            transition:grid-template-rows .28s cubic-bezier(.2,.7,.2,1), opacity .2s ease,
+                       margin-top .28s ease, padding-top .28s ease, border-color .2s ease;
+        }
+        .budget-category-card.expanded .budget-expense-details {
+            grid-template-rows:1fr; opacity:1; margin-top:11px; padding-top:3px;
+            border-top-color:rgba(120,125,135,.18);
+        }
+        .budget-expense-details-inner { min-height:0; overflow:hidden; }
+        @media (prefers-reduced-motion: reduce) {
+            .budget-category-chevron, .budget-expense-details { transition:none; }
+        }
+
+        /* Distinct warning zone for spending with no allocated budget */
+        .unbudgeted-alert-section {
+            margin-top:18px; padding:13px; border:1.5px solid #e5484d; border-radius:16px;
+            background:linear-gradient(145deg,#fff4f2 0%,#fffafa 58%,#fff1ef 100%);
+            box-shadow:0 3px 12px rgba(190,35,35,.09);
+        }
+        .unbudgeted-alert-heading { display:flex; align-items:center; gap:10px; min-width:0; }
+        .unbudgeted-alert-icon {
+            display:flex; align-items:center; justify-content:center; flex:0 0 29px; width:29px; height:29px;
+            border-radius:50%; background:#d92d35; color:#fff; font-size:19px; font-weight:800;
+            box-shadow:0 0 0 4px rgba(217,45,53,.12);
+        }
+        .unbudgeted-alert-copy { flex:1; min-width:0; }
+        .unbudgeted-alert-title { color:#a3131b; font-size:14px; font-weight:800; letter-spacing:.1px; }
+        .unbudgeted-alert-subtitle { margin-top:2px; color:#9b4246; font-size:11px; }
+        .unbudgeted-alert-total { flex-shrink:0; color:#b4232b; font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; }
+        .unbudgeted-alert-message {
+            margin:11px 0 12px; padding:8px 10px; border-radius:9px;
+            background:rgba(217,45,53,.08); color:#8f252b; font-size:11px; line-height:1.45;
+        }
+        .unbudgeted-alert-categories .unbudgeted-category-card { background:#fff; border-color:#f0aaa7; }
+        .unbudgeted-alert-categories .unbudgeted-category-card:last-child { margin-bottom:0 !important; }
+        @media (prefers-reduced-motion: reduce) {
+            .unbudgeted-alert-section, .unbudgeted-alert-icon { animation:none; }
+        }
+
+        .budget-expense-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:10px 1px; border-bottom:1px solid #eef0f3; }
+        .budget-expense-row:last-child { border-bottom:0; }
+        .budget-expense-description { min-width:0; }
+        .budget-expense-subcategory { font-size:12px; font-weight:650; color:#30343b; }
+        .budget-expense-meta { margin-top:3px; color:#858b96; font-size:10px; overflow-wrap:anywhere; }
+        .budget-expense-amount { flex-shrink:0; color:#252932; font-size:12px; font-weight:700; white-space:nowrap; }
+        .budget-expense-empty { padding:12px 2px 4px; color:#858b96; font-size:12px; }
+
+</style>
 </head>
 
 <body>
@@ -431,22 +551,33 @@
                     <!-- Amount -->
                     <label for="amount">Amount</label>
                     <input id="amount" type="number" inputmode="decimal" placeholder="₹ 0">
-                    <!-- Category -->
-                    <label for="category">Category</label>
-                    <select id="category"></select>
-                    <!-- Sub Category -->
-                    <label for="subCategory">Sub-category</label>
-                    <select id="subCategory"></select>
+                    <!-- Visual category picker; the original select remains the source of truth. -->
+                    <div class="expense-field-heading"><label>Category</label><span id="selectedCategoryHint">Choose a category</span></div>
+                    <div id="recentCategoryWrap" class="recent-category-wrap" hidden>
+                        <div class="picker-eyebrow">RECENT</div>
+                        <div id="recentCategoryGrid" class="recent-category-grid"></div>
+                    </div>
+                    <div id="categoryGrid" class="category-grid" role="group" aria-label="Expense category"></div>
+                    <select id="category" class="picker-native-select" aria-hidden="true" tabindex="-1"></select>
+
+                    <!-- Subcategories become quick-tap chips after a category is selected. -->
+                    <div class="expense-field-heading subcategory-heading"><label>Sub-category</label></div>
+                    <div id="subCategoryChips" class="subcategory-chips" role="group" aria-label="Expense sub-category"></div>
+                    <select id="subCategory" class="picker-native-select" aria-hidden="true" tabindex="-1"></select>
+
                     <!-- Date -->
                     <label for="date">Date</label>
                     <input id="date" type="date">
-                    <!-- Note -->
-                    <label for="note">Note</label>
-                    <textarea id="note" placeholder="Optional"></textarea>
-                    <!-- Optional sinking fund withdrawal -->
-                    <label for="fundSelect">Deduct from sinking fund (Optional)</label>
-                    <select id="fundSelect"><option value="">Do not deduct from a fund</option></select>
-                    <div style="font-size:12px;color:#777;margin-top:6px;line-height:1.45;">Select a fund only when this expense should use its accumulated balance.</div>
+
+                    <details class="expense-optional-fields">
+                        <summary><span>＋ Add note</span><span class="optional-tag">OPTIONAL</span></summary>
+                        <textarea id="note" placeholder="What was this expense for?" aria-label="Expense note"></textarea>
+                    </details>
+                    <details class="expense-optional-fields fund-optional-fields">
+                        <summary><span>＋ Use a sinking fund</span><span class="optional-tag">OPTIONAL</span></summary>
+                        <select id="fundSelect"><option value="">Do not deduct from a fund</option></select>
+                        <div class="optional-help">Select a fund only when this expense should use its accumulated balance.</div>
+                    </details>
                     <div id="message"></div>
                 </div>
                 </div>
@@ -467,23 +598,23 @@
 
         const categories = {
             "Food": [
+                "Meals & Dining",
                 "Street Food",
-                "Restaurants",
-                "Cafes",
                 "Snacks",
-                "Food Delivery",
-                "Ice Cream",
-                "Coffee & Tea"
+                "Drinks & Beverages",
+                "Coffee & Tea",
+                "Desserts & Ice Cream",
+                "Other"
             ],
 
             "Lifestyle Shopping": [
-                "Amazon",
-                "Myntra",
-                "Flipkart",
-                "Ajio",
-                "Meesho",
-                "Nykaa",
-                "Offline Stores"
+                "Clothing",
+                "Footwear",
+                "Electronics & Gadgets",
+                "Home & Kitchen",
+                "Bags & Accessories",
+                "Personal Accessories",
+                "Other Shopping"
             ],
 
             "Fuel": [
@@ -494,8 +625,9 @@
             "Public Transport": [
                 "Bus",
                 "Metro",
-                "Auto",
-                "Cab",
+                "Auto-rickshaw",
+                "Cab / Taxi",
+                "Office Commute",
                 "Other"
             ],
 
@@ -523,20 +655,21 @@
 
             "Utilities & Bills": [
                 "Electricity",
-                "Gas",
-                "Internet / Broadband",
+                "LPG / Cooking Gas",
+                "Internet & Broadband",
                 "Mobile Recharge",
-                "Newspaper",
-                "Other"
+                "DTH / Cable TV",
+                "Newspaper & Subscriptions",
+                "Other Bills"
             ],
 
             "Household": [
-                "Milk / Curd",
-                "Grocery",
+                "Groceries",
+                "Milk & Dairy",
                 "Fruits & Vegetables",
+                "Household Supplies",
+                "Kitchen Consumables",
                 "Baby Essentials",
-                "TV / Cable",
-                "Electrical Items",
                 "Other"
             ],
 
@@ -627,8 +760,10 @@
 
             "Social & Giving": [
                 "Donations",
-                "Social Functions",
-                "Offerings",
+                "Family Functions",
+                "Weddings & Gifts",
+                "Religious Contributions",
+                "Helping Others",
                 "Other"
             ],
 
@@ -676,6 +811,65 @@
             }
         }
         const lastExpenseSelection = readLastExpenseSelection();
+        const categoryIcons = {
+            "Food":"🍔", "Lifestyle Shopping":"🛍️", "Fuel":"⛽",
+            "Public Transport":"🚌", "Transport & Parking":"🅿️",
+            "Car Maintenance":"🚗", "Bike Maintenance":"🏍️",
+            "Utilities & Bills":"💡", "Household":"🏠",
+            "Household Maintenance":"🧰", "Fitness":"🏃",
+            "Health & Medical":"🩺", "Personal Care":"🧴",
+            "Family & Kids":"👨‍👩‍👧", "Entertainment":"🎬",
+            "Loan / EMI":"🏦", "Investments":"📈", "Savings":"🐷",
+            "Insurance":"🛡️", "Social & Giving":"🎁",
+            "Payments & Transfers":"💳", "Other":"📦"
+        };
+        const categoryGrid = document.getElementById("categoryGrid");
+        const recentCategoryGrid = document.getElementById("recentCategoryGrid");
+        const recentCategoryWrap = document.getElementById("recentCategoryWrap");
+        const subCategoryChips = document.getElementById("subCategoryChips");
+        const RECENT_CATEGORIES_KEY = "expenseTracker.recentExpenseCategories.v1";
+
+        function readRecentCategories() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(RECENT_CATEGORIES_KEY) || "[]");
+                return Array.isArray(saved) ? saved.filter(name => categories[name]).slice(0, 4) : [];
+            } catch (_) { return []; }
+        }
+        function rememberRecentCategory(category) {
+            try {
+                const recent = [category, ...readRecentCategories().filter(item => item !== category)].slice(0, 4);
+                localStorage.setItem(RECENT_CATEGORIES_KEY, JSON.stringify(recent));
+            } catch (_) {}
+            renderRecentCategories();
+        }
+        function makeCategoryButton(category, compact = false) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "category-option" + (categorySelect.value === category ? " selected" : "");
+            button.setAttribute("aria-pressed", categorySelect.value === category ? "true" : "false");
+            button.innerHTML = `<span class="category-emoji" aria-hidden="true">${categoryIcons[category] || "📁"}</span><span class="category-name">${category}</span>`;
+            button.addEventListener("click", () => selectExpenseCategory(category));
+            return button;
+        }
+        function renderCategoryGrid() {
+            categoryGrid.innerHTML = "";
+            Object.keys(categories).forEach(category => categoryGrid.appendChild(makeCategoryButton(category)));
+            document.getElementById("selectedCategoryHint").textContent = categorySelect.value || "Choose a category";
+        }
+        function renderRecentCategories() {
+            const recent = readRecentCategories();
+            recentCategoryGrid.innerHTML = "";
+            recent.forEach(category => recentCategoryGrid.appendChild(makeCategoryButton(category, true)));
+            recentCategoryWrap.hidden = recent.length === 0;
+        }
+        function selectExpenseCategory(category) {
+            if (!categories[category]) return;
+            categorySelect.value = category;
+            updateSubCategories(false);
+            saveLastExpenseSelection();
+            rememberRecentCategory(category);
+            renderCategoryGrid();
+        }
 
         Object.keys(categories).forEach(category => {
             const option = document.createElement("option");
@@ -683,37 +877,48 @@
             option.textContent = category;
             categorySelect.appendChild(option);
         });
+        if (categories[lastExpenseSelection.category]) categorySelect.value = lastExpenseSelection.category;
 
-        if (categories[lastExpenseSelection.category]) {
-            categorySelect.value = lastExpenseSelection.category;
+        function renderSubCategoryChips() {
+            subCategoryChips.innerHTML = "";
+            Array.from(subCategorySelect.options).forEach(option => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "subcategory-chip" + (option.value === subCategorySelect.value ? " selected" : "");
+                chip.setAttribute("aria-pressed", option.value === subCategorySelect.value ? "true" : "false");
+                chip.textContent = option.textContent;
+                chip.addEventListener("click", () => {
+                    subCategorySelect.value = option.value;
+                    saveLastExpenseSelection();
+                    renderSubCategoryChips();
+                });
+                subCategoryChips.appendChild(chip);
+            });
         }
-
-        // =====================================================
-        // UPDATE SUB-CATEGORIES
-        // =====================================================
-
         function updateSubCategories(restoreLastSelection = false) {
             const category = categorySelect.value;
             subCategorySelect.innerHTML = "";
-
             (categories[category] || []).forEach(subCategory => {
                 const option = document.createElement("option");
                 option.value = subCategory;
                 option.textContent = subCategory;
                 subCategorySelect.appendChild(option);
             });
-
             if (restoreLastSelection && lastExpenseSelection.category === category &&
-                categories[category].includes(lastExpenseSelection.subCategory)) {
+                (categories[category] || []).includes(lastExpenseSelection.subCategory)) {
                 subCategorySelect.value = lastExpenseSelection.subCategory;
             }
+            renderSubCategoryChips();
         }
-
         categorySelect.addEventListener("change", () => {
             updateSubCategories(false);
             saveLastExpenseSelection();
+            renderCategoryGrid();
         });
-        subCategorySelect.addEventListener("change", saveLastExpenseSelection);
+        subCategorySelect.addEventListener("change", () => {
+            saveLastExpenseSelection();
+            renderSubCategoryChips();
+        });
 
         // Use the device's local calendar date (not UTC) to avoid a one-day shift.
         function getLocalDateInputValue() {
@@ -726,6 +931,8 @@
 
         document.getElementById("date").value = getLocalDateInputValue();
         updateSubCategories(true);
+        renderCategoryGrid();
+        renderRecentCategories();
 
 
         // =====================================================
@@ -855,245 +1062,125 @@
         }
 
         function updateBudgetTracker(expenses, budgets) {
-
-            const tracker =
-                document.getElementById("budgetTracker");
-
+            const tracker = document.getElementById("budgetTracker");
             const monthKey = selectedTransactionMonth;
-
-
-            // =====================================================
-            // CALCULATE SPENDING BY CATEGORY
-            // =====================================================
+            const monthExpenses = (expenses || []).filter(expense =>
+                expenseMonthKey(expense.date) === monthKey && !isInvestmentBudgetCategory(expense.category)
+            );
 
             const spendingByCategory = {};
-
-
-            expenses.forEach(expense => {
-
-                if (expenseMonthKey(expense.date) === monthKey && !isInvestmentBudgetCategory(expense.category)) {
-
-                    const category =
-                        expense.category;
-
-                    const amount = expenseAmount(expense.amount);
-
-                    spendingByCategory[category] =
-                        (spendingByCategory[category] || 0) +
-                        amount;
-                }
-
+            monthExpenses.forEach(expense => {
+                const category = expense.category || "Uncategorised";
+                spendingByCategory[category] = (spendingByCategory[category] || 0) + expenseAmount(expense.amount);
             });
-
-
-            // =====================================================
-            // BUDGET LOOKUP
-            // =====================================================
 
             const budgetMap = {};
-
-            budgets.forEach(budget => {
-
+            (budgets || []).forEach(budget => {
                 if (isInvestmentBudgetCategory(budget.category)) return;
                 budgetMap[budget.category] = expenseAmount(budget.monthlyBudget);
-
             });
-
 
             tracker.innerHTML = "";
 
+            // Sort every group by actual spending, highest to lowest.
+            const categories = Object.keys(spendingByCategory).map(category => ({
+                category,
+                spent: spendingByCategory[category],
+                budget: budgetMap[category] || 0
+            }));
+            const sortBySpendDescending = (a, b) => b.spent - a.spent || a.category.localeCompare(b.category);
+            const budgetedCategories = categories.filter(item => item.budget > 0).sort(sortBySpendDescending);
+            const unbudgetedCategories = categories.filter(item => item.budget <= 0).sort(sortBySpendDescending);
 
-            // =====================================================
-            // SHOW CATEGORIES WHERE MONEY WAS SPENT
-            // =====================================================
-
-            Object.keys(spendingByCategory).forEach(category => {
-
-                const spent =
-                    spendingByCategory[category];
-
-                const budget =
-                    budgetMap[category] || 0;
-
-
-                // =================================================
-                // UNBUDGETED SPEND
-                // =================================================
-
-                if (budget <= 0 && spent > 0) {
-
-                    const item =
-                        document.createElement("div");
-
-                    item.style.marginBottom = "16px";
-
-                    item.innerHTML = `
-
-                <div style="
-                    background:linear-gradient(
-                        135deg,
-                        #fff1f0,
-                        #ffe8e6
-                    );
-                    border:1px solid #ff3b30;
-                    border-radius:14px;
-                    padding:15px 16px;
-                    box-shadow:0 3px 10px rgba(255,59,48,0.12);
-                ">
-
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        gap:10px;
-                    ">
-
-                        <div style="
-                            font-weight:700;
-                            color:#d70015;
-                            font-size:15px;
-                        ">
-                            🚨 ${category}
-                        </div>
-
-                        <div style="
-                            font-weight:700;
-                            color:#d70015;
-                            font-size:16px;
-                            white-space:nowrap;
-                        ">
-                            ₹${spent.toLocaleString("en-IN")}
-                        </div>
-
-                    </div>
-
-                    <div style="
-                        font-size:13px;
-                        color:#b00000;
-                        margin-top:7px;
-                        font-weight:600;
-                    ">
-                        Unbudgeted spend
-                    </div>
-
-                    <div style="
-                        font-size:12px;
-                        color:#777;
-                        margin-top:3px;
-                    ">
-                        No monthly budget has been allocated to this category.
-                    </div>
-
-                </div>
-
-            `;
-
-                    tracker.appendChild(item);
-
-                    return;
-                }
-
-
-                // =================================================
-                // NORMAL BUDGETED CATEGORY
-                // =================================================
-
-                const percentage =
-                    budget > 0
-                        ? Math.round((spent / budget) * 100)
-                        : 0;
-
-                const width =
-                    Math.min(percentage, 100);
-
-
-                const item =
-                    document.createElement("div");
-
-                item.style.marginBottom = "20px";
-
-
-                // Determine status
+            const renderCategory = ({category, spent, budget}, unbudgeted = false) => {
+                const transactions = monthExpenses
+                    .filter(expense => (expense.category || "Uncategorised") === category)
+                    .slice()
+                    .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+                const percentage = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+                const width = Math.min(percentage, 100);
+                const item = document.createElement("div");
+                item.className = `budget-category-card${unbudgeted ? " unbudgeted-category-card" : ""}`;
+                item.style.marginBottom = "10px";
 
                 let statusText = `${percentage}% used`;
                 let statusColor = "#777";
-
                 if (percentage > 100) {
-
-                    statusText =
-                        `${percentage}% used · ₹${(spent - budget).toLocaleString("en-IN")} over budget`;
-
+                    statusText = `${percentage}% used · ${formatINR(spent - budget)} over budget`;
                     statusColor = "#d70015";
-
                 } else if (percentage >= 70) {
-
                     statusColor = "#b35a00";
-
                 }
 
+                const transactionRows = transactions.length
+                    ? transactions.map(expense => `
+                        <div class="budget-expense-row">
+                            <div class="budget-expense-description">
+                                <div class="budget-expense-subcategory">${escapeHTML(expense.subCategory || expense.subcategory || "Other")}</div>
+                                <div class="budget-expense-meta">${escapeHTML(expense.note || "No note")} · ${escapeHTML(String(expense.date || ""))}</div>
+                            </div>
+                            <div class="budget-expense-amount">${formatINR(expenseAmount(expense.amount))}</div>
+                        </div>
+                    `).join("")
+                    : '<div class="budget-expense-empty">No expenses recorded for this category.</div>';
 
                 item.innerHTML = `
+                    <button type="button" class="budget-category-toggle" aria-expanded="false">
+                        <span class="budget-category-main">
+                            <span class="budget-category-title">${unbudgeted ? "🚨 " : ""}${escapeHTML(category)}</span>
+                            ${unbudgeted
+                                ? '<span class="budget-category-status unbudgeted-status">No budget assigned</span>'
+                                : `<span class="budget-category-status" style="color:${statusColor};">${statusText}</span>`}
+                        </span>
+                        <span class="budget-category-right">
+                            <span class="budget-category-amounts">
+                                <strong>${formatINR(spent)}</strong>
+                                ${unbudgeted ? "" : `<span> / ${formatINR(budget)}</span>`}
+                            </span>
+                            <span class="budget-category-chevron" aria-hidden="true"></span>
+                        </span>
+                    </button>
+                    ${unbudgeted ? '<div class="unbudgeted-category-note">This spending was not planned in your monthly budget.</div>' : `
+                        <div class="budget-progress-track"><div class="budget-progress-fill" style="width:${width}%;background:${percentage > 100 ? "#ff3b30" : percentage >= 70 ? "#ff9500" : "#34c759"};"></div></div>
+                    `}
+                    <div class="budget-expense-details"><div class="budget-expense-details-inner">${transactionRows}</div></div>
+                `;
 
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                font-weight:600;
-            ">
+                const toggle = item.querySelector(".budget-category-toggle");
+                toggle.addEventListener("click", () => {
+                    const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+                    toggle.setAttribute("aria-expanded", String(!isExpanded));
+                    item.classList.toggle("expanded", !isExpanded);
+                });
+                return item;
+            };
 
-                <span>${category}</span>
+            // Normal planned categories first, ranked by spend.
+            budgetedCategories.forEach(category => tracker.appendChild(renderCategory(category)));
 
-                <span>
-                    ₹${spent.toLocaleString("en-IN")}
-                    /
-                    ₹${budget.toLocaleString("en-IN")}
-                </span>
-
-            </div>
-
-
-            <div style="
-                height:8px;
-                background:#e5e5e7;
-                border-radius:10px;
-                margin-top:8px;
-                overflow:hidden;
-            ">
-
-                <div style="
-                    width:${width}%;
-                    height:100%;
-                    background:${percentage > 100
-                        ? "#ff3b30"
-                        : percentage >= 70
-                            ? "#ff9500"
-                            : "#34c759"
-                    };
-                    border-radius:10px;
-                "></div>
-
-            </div>
-
-
-            <div style="
-                font-size:13px;
-                color:${statusColor};
-                margin-top:5px;
-                font-weight:${percentage > 100 ? "600" : "400"};
-            ">
-
-                ${statusText}
-
-            </div>
-
-        `;
-
-
-                tracker.appendChild(item);
-
-            });
-
+            // Keep unbudgeted spend in a distinct, high-visibility alert area at the bottom.
+            if (unbudgetedCategories.length) {
+                const unbudgetedTotal = unbudgetedCategories.reduce((sum, item) => sum + item.spent, 0);
+                const alertSection = document.createElement("section");
+                alertSection.className = "unbudgeted-alert-section";
+                alertSection.setAttribute("aria-label", "Unbudgeted spending needs attention");
+                alertSection.innerHTML = `
+                    <div class="unbudgeted-alert-heading">
+                        <div class="unbudgeted-alert-icon" aria-hidden="true">!</div>
+                        <div class="unbudgeted-alert-copy">
+                            <div class="unbudgeted-alert-title">Unbudgeted spending</div>
+                            <div class="unbudgeted-alert-subtitle">${unbudgetedCategories.length} ${unbudgetedCategories.length === 1 ? "category" : "categories"} with no monthly budget</div>
+                        </div>
+                        <div class="unbudgeted-alert-total">${formatINR(unbudgetedTotal)}</div>
+                    </div>
+                    <div class="unbudgeted-alert-message">These expenses were not planned. Review them before using next month's budget.</div>
+                    <div class="unbudgeted-alert-categories"></div>
+                `;
+                const categoryContainer = alertSection.querySelector(".unbudgeted-alert-categories");
+                unbudgetedCategories.forEach(category => categoryContainer.appendChild(renderCategory(category, true)));
+                tracker.appendChild(alertSection);
+            }
         }
-
 
         function getMonthKey(year, monthIndex) {
             return `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
